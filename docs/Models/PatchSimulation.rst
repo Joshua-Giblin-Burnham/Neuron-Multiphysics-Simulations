@@ -1,6 +1,7 @@
-============================
 Membrane Patch Simulation 
 ============================
+
+
 
 Finite difference simulation of neuronal membrane patch
 -------------------------------------------------------

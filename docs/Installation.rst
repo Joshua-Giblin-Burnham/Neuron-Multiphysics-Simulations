@@ -2,15 +2,12 @@ Running Simulator
 ===================================
 The code can be used to simulate the mechno-electrophysiological and biochemical coupling in neurons. 
 
+This project implements the Herzog model for simulating neural dynamics with the incorporation of ultrasound constraints. The model is implemented in Python using 
+scientific computing libraries such as NumPy, SciPy, and Numba. The code includes functions to calculate various model parameters, generate ultrasound pulses, and 
+perform optimization using the Rayleighian function. The provided code offers a comprehensive framework for simulating neural dynamics using the Herzog model with the inclusion of ultrasound constraints. 
+By utilizing the provided functions and classes, users can customize and run simulations to explore the impact of various parameters and constraints on the 
+model's behavior
 
-Calculates scan variables and export them to csv files then runs ABAQUS using seperate python scripts that import the variable data. 
-ABAQUS can be run locally, however, they are designed to be run on remote servers, using SSH to upload files and run ABAQUS on HPC queues. 
-Cloning the git page and pip installing 'nuphysim' will add all packages/ modules to your python enviroment. 
-All Jupyter notebooks(.ipynb) are self contained, they produce the input files, in the specified local working directory, 
-for each simulation so best run from own self contained directory. The notebooks contain breakdown and description of code function. 
-Seperate Python(.py) files for the patchsim simulation are available in the 'Python Scripts' folder. 
-For more lightweight code the simulator can be run from separate python kernal/notebook by importing the patchsim_ABAQUS_Simulation_Code.py file 
-(the ABAQUS scripts will need to be copied into the working directory (localPath) specified in simulator).
 
 Importing Python files
 ===================================
