@@ -1,6 +1,9 @@
 ============================
-Membrane Patch Simulation : Finite difference simulation of neuronal membrane patch
+Membrane Patch Simulation 
 ============================
+
+Finite difference simulation of neuronal membrane patch
+-------------------------------------------------------
 
 .. image::  https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/PatchSim.png
 
