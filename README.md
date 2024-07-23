@@ -5,7 +5,7 @@ Repository for code DPhil project simulating neuronal membrane, multiphysics and
 
 
 <p align="center">
-   <img width="650" height="300" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/Figures/.png">
+   <img width="650" height="300" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/Nuphysim.png">
 </p>
 
 
@@ -16,6 +16,11 @@ View documentation here,  .
 ## Modules
 
 ### PatchSim : Finite difference simulation of neuronal membrane patch
+
+<p align="center">
+   <img width="650" height="300" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/PatchSim.png">
+</p>
+
 
 As a simple application of our variational model we consider a infinitesimal patch of membrane with homogeneous properties such that all positional gradients are zero. Consequently, all integrals over $dA$ simplify to products with the area of the patch $A$ and we loss the terms associated with $d\dot{A}$. We treat the infinitesimal patch of membrane as an umbilical point, approximating the local curvature as spherical with radius $r_c = 1/H$. Therefore, the normal velocity $v_n$ becomes the radial velocity $\dot{r}_c = -\dot{H}/H^2$. Using the definition of the rate-of-deformation we can then define $\text{tr}|\boldsymbol{d}| \approx -\dot{H}/H$ and $\boldsymbol{d}:\boldsymbol{d}\approx 2\left(\dot{H}/H\right)^2$. Applying this simplification to the Rayleighian we define a Rayleighian for a finite membrane patch:  
 
@@ -49,6 +54,9 @@ Within our Python implementation we define an array of discrete time steps in wh
 
 ## Running Simulator
 The code calculates scan variables and export them to csv files then runs ABAQUS using seperate python scripts that import the variable data. ABAQUS can be run locally, however, they are designed to be run on remote servers, using SSH to upload files and run ABAQUS on HPC queues. Cloning the git page and pip installing 'nuphysim' will add all packages/ modules to your python enviroment. All Jupyter notebooks(.ipynb) are self contained, they produce the input files, in the specified local working directory, for each simulation so best run from own self contained directory. The notebooks contain breakdown and description of code function. Seperate Python(.py) files for the AFM simulation are available in the 'Python Scripts' folder. For more lightweight code the simulator can be run from separate python kernal/notebook by importing the AFM_ABAQUS_Simulation_Code.py file (the ABAQUS scripts will need to be copied into the working directory (localPath) specified in simulator).
+
+
+
 
 ### Importing Python files
 Within a seperate python script the simulator code can be imported by either appending the package using system command and path to directory holding the files:
