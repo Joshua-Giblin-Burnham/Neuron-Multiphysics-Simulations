@@ -5,7 +5,7 @@ Repository for code DPhil project simulating neuronal membrane, multiphysics and
 
 
 <p align="center">
-   <img width="500" height="300" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/Nuphysim.png">
+   <img width="700" height="500" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/Nuphysim.png">
 </p>
 
 
@@ -18,28 +18,23 @@ View documentation here,  .
 ### PatchSim : Finite difference simulation of neuronal membrane patch
 
 <p align="center">
-   <img width="450" height="450" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/PatchSim.png">
+   <img width="400" height="450" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/PatchSim.png">
 </p>
 
 
-As a simple application of our variational model we consider a infinitesimal patch of membrane with homogeneous properties such that all positional gradients are zero. Consequently, all integrals over $dA$ simplify to products with the area of the patch $A$ and we loss the terms associated with $d\dot{A}$. We treat the infinitesimal patch of membrane as an umbilical point, approximating the local curvature as spherical with radius $r_c = 1/H$. Therefore, the normal velocity $v_n$ becomes the radial velocity $\dot{r}_c = -\dot{H}/H^2$. Using the definition of the rate-of-deformation we can then define $\text{tr}|\boldsymbol{d}| \approx -\dot{H}/H$ and $\boldsymbol{d}:\boldsymbol{d}\approx 2\left(\dot{H}/H\right)^2$. Applying this simplification to the Rayleighian we define a Rayleighian for a finite membrane patch:  
+As a simple application of our variational model we consider a infinitesimal patch of membrane with homogeneous properties such that all positional gradients are zero. Consequently, all integrals over $dA$ simplify to products with the area of the patch $A$ and we loss the terms associated with $d\dot{A}$. We treat the infinitesimal patch of membrane as an umbilical point, approximating the local curvature as spherical with radius $r_c = 1/H$. Therefore, the normal velocity $v_n$ becomes the radial velocity $\dot{r}_c = -\dot{H}/H^2$. Using the definition of the rate-of-deformation we can then define $\text{tr}|\boldsymbol{d}| \approx -\dot{H}/H$ and $\boldsymbol{d}:\boldsymbol{d}\approx 2(\dot{H}/H)^2$. Applying this simplification to the Rayleighian we define a Rayleighian for a finite membrane patch:  
 
-\begin{align}
-\begin{split}
-    \mathfrak{R} = 
-    & \Biggl\{ 2K_b (2H-H_0\tilde{c})\dot{H} - C_m\phi\phi_0\dot{H}  + \left(\frac{2\eta_{s}+\lambda}{H^2}\right)\dot{H}^2 \\    
-    & - \Bigl(\phi^2+2\phi_0\phi H \Bigr)\dot{C}_m + \frac{\gamma_aH-P}{H^2} \dot{H} \\
-    & + \Bigl(\frac{\mathfrak{\mu}^{\text{chem}}_{a}-\mu_{b}}{a_0} + \frac{1}{2}\frac{q\phi}{a_0}- K_b H_0 (2H-H_0\tilde{c})\Bigr)\dot{\tilde{c}} + \frac{1}{ a_0 \tilde{k}} \dot{\tilde{c}}^2\\
-    & + \biggl[ -C_m (\phi+\phi_0H) + \frac{1}{2}\left( \rho_0+ \frac{q\tilde{c}}{a_0}\right)\biggr]\dot{\phi}\\
-    & + R_m\cdot\Bigl[ C_m(\dot{\phi}+\phi_0\dot{H}) + \dot{C}_m(\phi+\phi_0H) \Bigr]^2\Biggr\}A  ,
-\end{split}
-\end{align}
+
+$$ \mathfrak{R} = 
+ \Biggl\{ 2K_b (2H-H_0\tilde{c})\dot{H} - C_m\phi\phi_0\dot{H}  + \left(\frac{2\eta_{s}+\lambda}{H^2}\right)\dot{H}^2 \\    
+ - \Bigl(\phi^2+2\phi_0\phi H \Bigr)\dot{C}_m + \frac{\gamma_aH-P}{H^2} \dot{H} \\
+ + \Bigl(\frac{\mathfrak{\mu}^{\text{chem}}_{a}-\mu_{b}}{a_0} + \frac{1}{2}\frac{q\phi}{a_0}- K_b H_0 (2H-H_0\tilde{c})\Bigr)\dot{\tilde{c}} + \frac{1}{ a_0 \tilde{k}} \dot{\tilde{c}}^2\\
+ + \biggl[ -C_m (\phi+\phi_0H) + \frac{1}{2}\left( \rho_0+ \frac{q\tilde{c}}{a_0}\right)\biggr]\dot{\phi}\\
+ + R_m\cdot\Bigl[ C_m(\dot{\phi}+\phi_0\dot{H}) + \dot{C}_m(\phi+\phi_0H) \Bigr]^2\Biggr\}A  ,$$
 
 where the evolution of areal capacitance is given by
 
-\begin{align}
-    \dot{C}_m  = -\frac{\varepsilon d}{2}H \dot{H} . 
-\end{align}
+$$\dot{C}_m  = -\frac{\varepsilon d}{2}H \dot{H} . $$
 
 Applying a finite difference approximation to the time derivatives of $X = \{H,\tilde{c},\phi\}$ we simulate the systems evolution by minimising at each time step. For time step n, the Rayleighian is minimised with respect to $X_{n+1}$, giving the evolution of the curvature, membrane saturation and potential across a single patch of the membrane. Model parameters are taken from the literature.
 
@@ -53,7 +48,13 @@ Within our Python implementation we define an array of discrete time steps in wh
 
 
 ## Running Simulator
-The code calculates scan variables and export them to csv files then runs ABAQUS using seperate python scripts that import the variable data. ABAQUS can be run locally, however, they are designed to be run on remote servers, using SSH to upload files and run ABAQUS on HPC queues. Cloning the git page and pip installing 'nuphysim' will add all packages/ modules to your python enviroment. All Jupyter notebooks(.ipynb) are self contained, they produce the input files, in the specified local working directory, for each simulation so best run from own self contained directory. The notebooks contain breakdown and description of code function. Seperate Python(.py) files for the AFM simulation are available in the 'Python Scripts' folder. For more lightweight code the simulator can be run from separate python kernal/notebook by importing the AFM_ABAQUS_Simulation_Code.py file (the ABAQUS scripts will need to be copied into the working directory (localPath) specified in simulator).
+The code can be used to simulate the mechno-electrophysiological and biochemical coupling in neurons. 
+
+This project implements the Herzog model for simulating neural dynamics with the incorporation of ultrasound constraints. The model is implemented in Python using 
+scientific computing libraries such as NumPy, SciPy, and Numba. The code includes functions to calculate various model parameters, generate ultrasound pulses, and 
+perform optimization using the Rayleighian function. The provided code offers a comprehensive framework for simulating neural dynamics using the Herzog model with the inclusion of ultrasound constraints. 
+By utilizing the provided functions and classes, users can customize and run simulations to explore the impact of various parameters and constraints on the 
+model's behavior
 
 
 
@@ -68,23 +69,52 @@ Or by either copying the nuphysim package to the same directory or to the main p
 
      import nuphysim
 
-     nuphysim.afm.AFMSimulation(...)
+     nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
 
 
 Alternative:
 
      from nuphysim import *
 
-     afm.AFMSimulation(...)
+     patchsim.minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
 
 Alternative (can have conflicting functions do not do for all as shown):
 
      from nuphysim.afm import *
      
-     AFMSimulation(...) 
+     minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
 
 Then, the simulator can simply be run by defining the required variables and running main function:
 
+
+### Example
+
+1. **Initialize Constraints**:
+   Create a `Constraints` object with the desired constraint type and parameters. For example, to use ultrasound constraints:
+
+      from nuphysim.patchsim import Constraints
+
+      dt = 0.01
+      Tt = 100
+      Nt = 1000
+      constraint = Constraints('Ultrasound', dt, Tt, Nt)
+
+2. **Set Model Parameters**:
+   Define the parameters for the Herzog model, including initial conditions (`H0`), resting potential (`E_rest`), input current (`I`), total time (`Tt`), and number of time steps (`Nt`).
+
+      H0 = 1.0
+      E_rest = -70
+      I = np.zeros(Nt)
+      Tt = 100
+      Nt = 1000
+      args = (gamma_0, k_c, C_D, xi, mu_0a, R, T, a_0, c_0, mu_0b, epsilon)
+
+3. **Run Minimiser**:
+   Use the `minimiser` function to run the simulation with the specified parameters and constraints. The results will be saved to a file.
+
+      from nuphysim.patchsim import minimiser
+
+      minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
 
 
 ## Common errors:
