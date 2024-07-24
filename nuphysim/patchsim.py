@@ -11,39 +11,138 @@ from scipy import signal
 #-------------------------------------------Active Functions---------------------------------------------
 @njit
 def gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi):
+    """Calculate the active tension.
+
+    Args:
+        tilde_c (float): Area fraction of chemical adsorbants.
+        phi (float): Membrane potential.
+        gamma_0 (float): Intrinsic tension.
+        k_c (float): Tension parameter, equilibrium constant.
+        C_D (float): Tension parameter, membrane diellectric capacitance.
+        xi (float): Tension parameter, membrane chemical suceptabillity.
+
+    Returns:
+        float: Active tension.
+    """
+
     return gamma_0 + xi * (tilde_c**2 )/ (tilde_c - k_c) + (C_D * phi**2)/2 
 
 @njit
 def Cm(H,d, epsilon):
+    """ Calculate the membrane capacitance.
+
+    Args:
+        H (float): Membrane curvature.
+        d (float): Membrane thickness.
+        epsilon (float): Relative permittivity of membrane.
+
+    Returns:
+        float: Membrane capacitance.
+    """
+
     return (epsilon/d)*(1-((H*d)**2)/4)
-    # return (4*np.pi*epsilon/(d*H**2))*(1-((H*d)**2)/4)
 
 @njit
 def Cm_dot(H, H_dot, d, epsilon):
+    """
+    Calculate the derivative of the membrane capacitance.
+
+    Args:
+        H (float): Membrane curvature.
+        H_dot (float): Time derivative of membrane curvature.
+        d (float): Membrane thickness.
+        epsilon (float): Relative permittivity of membrane.
+
+    Returns:
+        float: Time derivative of the membrane capacitance.
+    """
     return -epsilon*d*H*H_dot/2
-    # return 2*(np.pi * epsilon - Cm(H, d, epsilon) )*H_dot/ H
 
 @njit
 def mu(tilde_c, tilde_c_m, mu_0a, R, T, a_0):
+    """Calculate the chemical potential of membrane.
+
+    Args:
+        tilde_c (float): Area fraction of chemical adsorbants.
+        tilde_c_m (float): Maximum area fraction of chemical adsorbants.
+        mu_0a (float): Baseline chemical potential of membrane.
+        R (float): Universal gas constant.
+        T (float): Temperature.
+        a_0 (float): Molar area.
+
+    Returns:
+        float: Surface chemical potential.
+    """
+
     return mu_0a/a_0  +  (R*T/a_0) * ( tilde_c and np.log( tilde_c / (tilde_c_m - tilde_c)) ) 
 
 @njit
 def mu_a(H, tilde_c, phi, args):
+    """Calculate the active chemical potential.
+
+    Args:
+        H (float): Membrane curvature.
+        tilde_c (float): Area fraction of chemical adsorbants.
+        phi (float): Membrane potential.
+        args (tuple): Surface parameters.
+
+    Returns:
+        float: Active chemical potential.
+    """
+
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q,  C_D, R, T, A = args
     return mu(tilde_c, tilde_c_m, mu_0a, R, T, a_0) + ((q*phi)/(2*a_0) )* phi - K_b * H_0 * (2 * H - H_0 * tilde_c)
 
 @njit
 def mu_b(c, c_0, mu_0b, R, T, a_0):
+    """Calculate the bulk chemical potential.
+
+    Args:
+        c (float): Concentration of chemical absorbates in bulk.
+        c_0 (float): Reference bulk concentration.
+        mu_0b (float): Baseline chemical potential.
+        R (float): Universal gas constant.
+        T (float): Temperature.
+        a_0 (float): Molar area.
+
+    Returns:
+        float: Bulk chemical potential.
+    """
+
     return mu_0b/a_0 + R*T * ( c and np.log(c /c_0) )
 
 @njit
 def tilde_k(H, tilde_c, phi, c, args):
+    """Calculate the Arrenius constant/ relative reaction rate.
+
+    Args:
+        H (float): Membrane curvature.
+        tilde_c (float): Area fraction of chemical adsorbants.
+        phi (float): Membrane potential.
+        c (float): Concentration of chemical absorbates in bulk.
+        args (tuple): Surface parameters.
+
+    Returns:
+        float: Reaction rate.
+    """
+
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q,  C_D, R, T, A = args
     return k_off*(  (c/k_c)*(tilde_c_m-tilde_c) - np.exp(-(mu_0a-mu_0b)/R*T)   )/(a_0* (mu_a(H, tilde_c, phi, args) - mu_b(c, c_0, mu_0b, R, T, a_0)))
 
 @njit
 def tilde(c,k_c):
+    """Calculate the Area fraction of chemical adsorbants.
+
+    Args:
+        c (float): Concentration of chemical absorbates in bulk.
+        k_c (float): Equilbrium constant.
+
+    Returns:
+        float: Area fraction of chemical adsorbants.
+    """
+
     return c*k_c/(1+c*k_c)
+
 
 
 # #----------------------------------------Rayleighian Functions-------------------------------------------
@@ -138,6 +237,17 @@ def tilde(c,k_c):
 #----------------------------------------Rayleighian Functions-------------------------------------------
 # @njit
 def Rayleighian(X, X_n, dt, args):
+    """Calculate the Rayleighian function.
+
+    Args:
+        X (array): Current state variables (Curvature H, Area fraction tilde_c, Potential phi).
+        X_n (array): Previous state variables (Curvature H, Area fraction tilde_c, Potential phi).
+        dt (float): Time step.
+        args (tuple): Surface parameters.
+
+    Returns:
+        float: Rayleighian value.
+    """
 
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d, m, h,o, p,  n, I = args
     
@@ -192,7 +302,20 @@ def Rayleighian(X, X_n, dt, args):
 
 #-------------------------------------------Ultrasound Functions-------------------------------------------
 def wavePulse(t, A, k, wavelets, Tt, A_0):
-    '''  '''
+    """Generate a wave pulse.
+
+    Args:
+        t (float): Time variable.
+        A (float): Amplitude.
+        k (float): Wave number.
+        wavelets (int): Number of wavelets.
+        Tt (float): Pulse duration.
+        A_0 (float): Initial amplitude.
+
+    Returns:
+        float: Generated wave pulse value.
+    """
+
     Nwavelets = 2*wavelets + 1
 
     f0     = k
@@ -205,8 +328,24 @@ def wavePulse(t, A, k, wavelets, Tt, A_0):
 
     return A_0 + A/2 * ( 1-int(wavelets != 0)*signal.square(np.pi*f1*(t+t1) ) ) * np.sin(2*np.pi*f0*(t-t0))
 
+    # p = np.zeros(len(t))
+    # for i in range(len(wavelets)):
+    #     p += A[i] * (np.sin(2 * np.pi * k[i] * t) * np.exp(-(4 * np.log(2) * (t - wavelets[i])**2) / Tt**2) + A_0)
+    # return p
+
+
+
 def wavePeriod(f, wavelets, Tt):
-    ''' '''
+    """Calculate the periods of waves given frequency, number of wavelets, and total time.
+
+    Args:
+        f (float): Frequency of the wave.
+        wavelets (int): Number of wavelets.
+        Tt (float): Total time.
+
+    Returns:
+        np.ndarray: Array of periods that are less than or equal to total time.
+    """
     Nwavelets = 2*wavelets + 1 
     fmin      = Nwavelets/Tt
     fdelta    = f*Tt/Nwavelets#1
@@ -217,6 +356,15 @@ def wavePeriod(f, wavelets, Tt):
     return  periods[periods<=Tt]
 
 def periodConditions(t, periods):
+    """Determine if a given time falls within any of the specified periods.
+
+    Args:
+        t (float): Time to check.
+        periods (np.ndarray): Array of periods.
+
+    Returns:
+        bool: True if the time is within any period, False otherwise.
+    """
     p1 = periods[::2]
     p2 = np.roll(periods,-1)[::2]
 
@@ -225,7 +373,14 @@ def periodConditions(t, periods):
     return bool(np.sum(period))
 
 def PulseConstraints(self, t):
-    ''' '''
+    """Define pulse constraints based on the time and internal periods.
+
+    Args:
+        t (float): Time.
+
+    Returns:
+        list: List of constraint dictionaries.
+    """
     if periodConditions(t, self.periods)==True :
         Xc = wavePulse(t, self.A, self.f, self.wavelets, self.Tt, self.A_0 )
         return  [{'type': 'eq', 'fun': lambda x: x[0] - Xc }] + [{'type': 'eq', 'fun': lambda x: x[1] }]
@@ -235,9 +390,25 @@ def PulseConstraints(self, t):
 
 #-------------------------------------------Constraint Class---------------------------------------------
 class Constraints:
-    '''  '''
+    """Class to handle various constraints for the optimization problem.
+
+    Args:
+        constraint (str): Type of constraint to apply.
+        dt (float): Time step.
+        Tt (float): Total time.
+        Nt (int): Number of time steps.
+        c_m (float, optional): Coefficient for Gaussian constraint. Default is 0.0014*1496.
+        t0 (float, optional): Time offset for Gaussian constraint. Default is 1e-6.
+        A (float, optional): Amplitude for Ultrasound constraint. Default is 1/1e-5.
+        f (float, optional): Frequency for Ultrasound constraint. Default is 1.8e7.
+        A_0 (float, optional): Initial amplitude for Ultrasound constraint. Default is 1e8.
+        wavelets (int, optional): Number of wavelets for Ultrasound constraint. Default is 2.
+    """
+
     def __init__(self, constraint, dt, Tt, Nt, c_m = 0.0014*1496, t0 = 1e-6, A = 1/1e-5, f = 1.8e7, A_0=1e8, wavelets=2 ):
-        ''' '''
+        """
+        Initialize the Constraints class with given parameters.
+        """
         self.constraint = constraint
         self.Tt = Tt
         self.dt = dt
@@ -274,7 +445,14 @@ class Constraints:
             raise Exception("No Valid Constraint")
 
     def changeUltrasoundParameters(self, A = 1/1e-5, f = 1.8e7, A_0=1e6, wavelets=2):
-        ''' '''
+        """Change the parameters for the Ultrasound constraint.
+
+        Args:
+            A (float, optional): Amplitude for Ultrasound constraint. Default is 1/1e-5.
+            f (float, optional): Frequency for Ultrasound constraint. Default is 1.8e7.
+            A_0 (float, optional): Initial amplitude for Ultrasound constraint. Default is 1e6.
+            wavelets (int, optional): Number of wavelets for Ultrasound constraint. Default is 2.
+        """
         self.A = A
         self.f = f
         self.A_0 = A_0
@@ -283,12 +461,24 @@ class Constraints:
 
 
     def changeDosingParameters(self, c_m = 5e-2, t0 = 1e-6):
-        ''' '''
+        """Change the parameters for the dosing constraint.
+
+        Args:
+            c_m (float, optional): Coefficient for Gaussian constraint. Default is 5e-2.
+            t0 (float, optional): Time offset for Gaussian constraint. Default is 1e-6.
+        """
         self.c_m = c_m
         self.t0  = t0 
     
     def constraintList(self, t):
-        ''' '''
+        """Get the list of constraints for a given time.
+
+        Args:
+            t (float): Time.
+
+        Returns:
+            list: List of constraint dictionaries.
+        """
         return self.ConstraintFunction(self, t)
 
 #==========================================================================================================
@@ -311,8 +501,20 @@ beta_p = lambda x: 0.13496 / (1 + np.exp((x + 10.27853) / (-9.09334)))
 
 
 def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename):
-    '''   
-    
+    '''Perform minimization using the Herzog model equations.
+
+    Args:
+        H0 (float): Initial value of the variable H.
+        E_rest (float): Resting membrane potential.
+        I (array): Input current array.
+        Tt (float): Total time for the simulation.
+        Nt (int): Number of time steps.
+        arg (tuple): Additional arguments for the Rayleighian function.
+        constraint (object): Constraint object with methods to apply constraints during minimization.
+        filename (str): Filename for saving output data.
+
+    Returns:
+        tuple: Arrays of X (variables), Xerr (errors), V (membrane potential), and t (time steps).
     '''
     t, dt = np.linspace(0,Tt,Nt), Tt/Nt
 
@@ -404,8 +606,3 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename):
         # np.savetxt("data"+os.sep+"XErr-"+filename+".csv",Xerr,delimiter=',')
 
     return X, Xerr, V, t
-
-
-
-
-
