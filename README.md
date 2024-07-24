@@ -25,12 +25,7 @@ View documentation here,  https://neuron-multiphysics-simulations.readthedocs.io
 As a simple application of our variational model we consider a infinitesimal patch of membrane with homogeneous properties such that all positional gradients are zero. Consequently, all integrals over $dA$ simplify to products with the area of the patch $A$ and we loss the terms associated with $d\dot{A}$. We treat the infinitesimal patch of membrane as an umbilical point, approximating the local curvature as spherical with radius $r_c = 1/H$. Therefore, the normal velocity $v_n$ becomes the radial velocity $\dot{r}_c = -\dot{H}/H^2$. Using the definition of the rate-of-deformation we can then define $\text{tr}|\boldsymbol{d}| \approx -\dot{H}/H$ and $\boldsymbol{d}:\boldsymbol{d}\approx 2(\dot{H}/H)^2$. Applying this simplification to the Rayleighian we define a Rayleighian for a finite membrane patch:  
 
 
-$$ \mathfrak{R} = 
- \Biggl\{ 2K_b (2H-H_0\tilde{c})\dot{H} - C_m\phi\phi_0\dot{H}  + \left(\frac{2\eta_{s}+\lambda}{H^2}\right)\dot{H}^2 
- - \Bigl(\phi^2+2\phi_0\phi H \Bigr)\dot{C}_m + \frac{\gamma_aH-P}{H^2} \dot{H}
- + \Bigl(\frac{\mathfrak{\mu}^{\text{chem}}_{a}-\mu_{b}}{a_0} + \frac{1}{2}\frac{q\phi}{a_0}- K_b H_0 (2H-H_0\tilde{c})\Bigr)\dot{\tilde{c}} + \frac{1}{ a_0 \tilde{k}} \dot{\tilde{c}}^2 
- + \biggl[ -C_m (\phi+\phi_0H) + \frac{1}{2}\left( \rho_0+ \frac{q\tilde{c}}{a_0}\right)\biggr]\dot{\phi}
- + R_m\cdot\Bigl[ C_m(\dot{\phi}+\phi_0\dot{H}) + \dot{C}_m(\phi+\phi_0H) \Bigr]^2\Biggr\}A  ,$$
+$$ \mathfrak{R} = \Biggl\{ 2K_b (2H-H_0\tilde{c})\dot{H} - C_m\phi\phi_0\dot{H}  + \left(\frac{2\eta_{s}+\lambda}{H^2}\right)\dot{H}^2 - \Bigl(\phi^2+2\phi_0\phi H \Bigr)\dot{C}_m + \frac{\gamma_aH-P}{H^2} \dot{H} + \Bigl(\frac{\mathfrak{\mu}^{\text{chem}}_{a}-\mu_{b}}{a_0} + \frac{1}{2}\frac{q\phi}{a_0}- K_b H_0 (2H-H_0\tilde{c})\Bigr)\dot{\tilde{c}} + \frac{1}{ a_0 \tilde{k}} \dot{\tilde{c}}^2 + \biggl[ -C_m (\phi+\phi_0H) + \frac{1}{2}\left( \rho_0+ \frac{q\tilde{c}}{a_0}\right)\biggr]\dot{\phi} + R_m\cdot\Bigl[ C_m(\dot{\phi}+\phi_0\dot{H}) + \dot{C}_m(\phi+\phi_0H) \Bigr]^2\Biggr\}A  ,$$
 
 where the evolution of areal capacitance is given by
 
