@@ -77,7 +77,7 @@ html_theme_options = {
         "color-admonition-background": "orange",
     },
     "navigation_with_keys": True,
-    "html_logo": '_figures/NuPhySim-logo.png'
+    "html_logo":  'https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/NuPhySim-logo.png'
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
