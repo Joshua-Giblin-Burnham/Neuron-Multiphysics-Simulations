@@ -77,6 +77,7 @@ html_theme_options = {
         "color-admonition-background": "orange",
     },
     "navigation_with_keys": True,
+    "html_logo": '_figures/NuPhySim-logo.png'
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
