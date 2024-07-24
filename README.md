@@ -25,7 +25,7 @@ View documentation here,  https://neuron-multiphysics-simulations.readthedocs.io
 As a simple application of our variational model we consider a infinitesimal patch of membrane with homogeneous properties such that all positional gradients are zero. Consequently, all integrals over $dA$ simplify to products with the area of the patch $A$ and we loss the terms associated with $d\dot{A}$. We treat the infinitesimal patch of membrane as an umbilical point, approximating the local curvature as spherical with radius $r_c = 1/H$. Therefore, the normal velocity $v_n$ becomes the radial velocity $\dot{r}_c = -\dot{H}/H^2$. Using the definition of the rate-of-deformation we can then define $\text{tr}|\boldsymbol{d}| \approx -\dot{H}/H$ and $\boldsymbol{d}:\boldsymbol{d}\approx 2(\dot{H}/H)^2$. Applying this simplification to the Rayleighian we define a Rayleighian for a finite membrane patch:  
 
 
-$$ \mathfrak{R} = \Biggl\{ 2K_b (2H-H_0\tilde{c})\dot{H} - C_m\phi\phi_0\dot{H}  + \left(\frac{2\eta_{s}+\lambda}{H^2}\right)\dot{H}^2 - \Bigl(\phi^2+2\phi_0\phi H \Bigr)\dot{C}_m + \frac{\gamma_aH-P}{H^2} \dot{H} + \Bigl(\frac{\mathfrak{\mu}^{\text{chem}}_{a}-\mu_{b}}{a_0} + \frac{1}{2}\frac{q\phi}{a_0}- K_b H_0 (2H-H_0\tilde{c})\Bigr)\dot{\tilde{c}} + \frac{1}{ a_0 \tilde{k}} \dot{\tilde{c}}^2 + \biggl[ -C_m (\phi+\phi_0H) + \frac{1}{2}\left( \rho_0+ \frac{q\tilde{c}}{a_0}\right)\biggr]\dot{\phi} + R_m\cdot\Bigl[ C_m(\dot{\phi}+\phi_0\dot{H}) + \dot{C}_m(\phi+\phi_0H) \Bigr]^2\Biggr\}A  ,$$
+$$ \mathfrak{R} = \Biggl[ 2K_b (2H-H_0\tilde{c})\dot{H} - C_m \phi \phi_{0} \dot{H}  + \left( \frac{2\eta_{s} + \lambda }{H^2} \right)\dot{H}^2 - \Bigl(\phi^2 + 2 \phi_{0} \phi H \Bigr)\dot{C}_m + \frac{ \gamma_{a} H - P }{H^2} \dot{H} + \Bigl(\frac{ \mu_{a}^{\text{chem}} - \mu_{b} }{a_0} + \frac{1}{2}\frac{q \phi}{a_{0}}- K_{b} H_{0} (2H - H_{0}\tilde{c}) \Bigr) \dot{\tilde{c}} + \frac{1}{ a_{0} \tilde{k}} \dot{\tilde{c}}^2 + \biggl[ - C_{m} ( \phi + \phi_{0} H) + \frac{1}{2} \left( \rho_{0} + \frac{q \tilde{c}}{a_{0}} \right) \biggr]\dot{\phi} + R_{m} \cdot \Bigl[ C_{m} (\dot{\phi} + \phi_{0} \dot{H}) + \dot{C}_{m} (\phi + \phi_{0} H) \Bigr]^2 \Biggr] A  $$
 
 where the evolution of areal capacitance is given by
 
@@ -62,22 +62,22 @@ Within a seperate python script the simulator code can be imported by either app
     
 Or by either copying the nuphysim package to the same directory or to the main python path (for jupyter notebook/spyder this will be main anaconda directory). Packages can be imported in various ways importing as:
 
-     import nuphysim
+    import nuphysim
 
-     nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
+    nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
 
 
 Alternative:
 
-     from nuphysim import *
+    from nuphysim import *
 
-     patchsim.minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
+    patchsim.minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
 
 Alternative (can have conflicting functions do not do for all as shown):
 
-     from nuphysim.afm import *
-     
-     minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
+    from nuphysim.afm import *
+
+    minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
 
 Then, the simulator can simply be run by defining the required variables and running main function:
 
@@ -87,29 +87,29 @@ Then, the simulator can simply be run by defining the required variables and run
 1. **Initialize Constraints**:
    Create a `Constraints` object with the desired constraint type and parameters. For example, to use ultrasound constraints:
 
-      from nuphysim.patchsim import Constraints
+    from nuphysim.patchsim import Constraints
 
-      dt = 0.01
-      Tt = 100
-      Nt = 1000
-      constraint = Constraints('Ultrasound', dt, Tt, Nt)
+    dt = 0.01
+    Tt = 100
+    Nt = 1000
+    constraint = Constraints('Ultrasound', dt, Tt, Nt)
 
 2. **Set Model Parameters**:
    Define the parameters for the Herzog model, including initial conditions (`H0`), resting potential (`E_rest`), input current (`I`), total time (`Tt`), and number of time steps (`Nt`).
 
-      H0 = 1.0
-      E_rest = -70
-      I = np.zeros(Nt)
-      Tt = 100
-      Nt = 1000
-      args = (gamma_0, k_c, C_D, xi, mu_0a, R, T, a_0, c_0, mu_0b, epsilon)
+    H0 = 1.0
+    E_rest = -70
+    I = np.zeros(Nt)
+    Tt = 100
+    Nt = 1000
+    args = (gamma_0, k_c, C_D, xi, mu_0a, R, T, a_0, c_0, mu_0b, epsilon)
 
 3. **Run Minimiser**:
    Use the `minimiser` function to run the simulation with the specified parameters and constraints. The results will be saved to a file.
 
-      from nuphysim.patchsim import minimiser
+    from nuphysim.patchsim import minimiser
 
-      minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
+    minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
 
 
 ## Common errors:
