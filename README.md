@@ -11,7 +11,7 @@ Repository for code DPhil project simulating neuronal membrane, multiphysics and
 
 Recent experiments have underscored the active nature of neuronal membranes, revealing an intricate coupling between their mechanical, electrophysiological, and biochemical properties. To address this complexity, we develop a coupled mechano-electrophysiological and biochemical model for neuronal lipid bilayers. Extending the Onsager variational principle to neuronal membranes, we describe the non-equilibrium dynamics of infinitesimal membrane patches. Through minimising the energetic fluxes and dissipative potentials, we can derive the system's equations of motion. Applying a finite difference simulation we provide a framework for further simulational work and experimental comparison. We hope to simulate the chemical influence of anesthetics on neurons, producing modulation in curvature and voltage seen in experiments. Similarly, we hope to demonstration computationally that mechanical oscillations at ultrasound frequencies can directly influence membrane potential. The underlying mechanics may reveal profound implications for understanding brain function.
 
-View documentation here,  .
+View documentation here,  https://neuron-multiphysics-simulations.readthedocs.io/en/latest/index.html#.
 
 ## Modules
 
