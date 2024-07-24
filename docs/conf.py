@@ -70,6 +70,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = "furo"
 # html_theme = "sphinx_rtd_theme"
 
+html_logo =  'https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/NuPhySim-logo.png'
+html_favicon ='https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/NuPhySim-logo.png'
+
 html_theme_options = {
     "dark_css_variables": {
         "color-brand-primary": "red",
@@ -77,7 +80,8 @@ html_theme_options = {
         "color-admonition-background": "orange",
     },
     "navigation_with_keys": True,
-    "html_logo":  'https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/NuPhySim-logo.png'
+    'logo_only': False,
+    'display_version': False,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
