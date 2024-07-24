@@ -87,29 +87,29 @@ Then, the simulator can simply be run by defining the required variables and run
 1. **Initialize Constraints**:
    Create a `Constraints` object with the desired constraint type and parameters. For example, to use ultrasound constraints:
 
-    from nuphysim.patchsim import Constraints
+        from nuphysim.patchsim import Constraints
 
-    dt = 0.01
-    Tt = 100
-    Nt = 1000
-    constraint = Constraints('Ultrasound', dt, Tt, Nt)
+        dt = 0.01
+        Tt = 100
+        Nt = 1000
+        constraint = Constraints('Ultrasound', dt, Tt, Nt)
 
 2. **Set Model Parameters**:
    Define the parameters for the Herzog model, including initial conditions (`H0`), resting potential (`E_rest`), input current (`I`), total time (`Tt`), and number of time steps (`Nt`).
 
-    H0 = 1.0
-    E_rest = -70
-    I = np.zeros(Nt)
-    Tt = 100
-    Nt = 1000
-    args = (gamma_0, k_c, C_D, xi, mu_0a, R, T, a_0, c_0, mu_0b, epsilon)
+        H0 = 1.0
+        E_rest = -70
+        I = np.zeros(Nt)
+        Tt = 100
+        Nt = 1000
+        args = (gamma_0, k_c, C_D, xi, mu_0a, R, T, a_0, c_0, mu_0b, epsilon)
 
 3. **Run Minimiser**:
    Use the `minimiser` function to run the simulation with the specified parameters and constraints. The results will be saved to a file.
 
-    from nuphysim.patchsim import minimiser
+        from nuphysim.patchsim import minimiser
 
-    minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
+        minimiser(H0, E_rest, I, Tt, Nt, args, constraint, 'output_filename')
 
 
 ## Common errors:
