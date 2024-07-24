@@ -26,10 +26,10 @@ As a simple application of our variational model we consider a infinitesimal pat
 
 
 $$ \mathfrak{R} = 
- \Biggl\{ 2K_b (2H-H_0\tilde{c})\dot{H} - C_m\phi\phi_0\dot{H}  + \left(\frac{2\eta_{s}+\lambda}{H^2}\right)\dot{H}^2 \\    
- - \Bigl(\phi^2+2\phi_0\phi H \Bigr)\dot{C}_m + \frac{\gamma_aH-P}{H^2} \dot{H} \\
- + \Bigl(\frac{\mathfrak{\mu}^{\text{chem}}_{a}-\mu_{b}}{a_0} + \frac{1}{2}\frac{q\phi}{a_0}- K_b H_0 (2H-H_0\tilde{c})\Bigr)\dot{\tilde{c}} + \frac{1}{ a_0 \tilde{k}} \dot{\tilde{c}}^2\\
- + \biggl[ -C_m (\phi+\phi_0H) + \frac{1}{2}\left( \rho_0+ \frac{q\tilde{c}}{a_0}\right)\biggr]\dot{\phi}\\
+ \Biggl\{ 2K_b (2H-H_0\tilde{c})\dot{H} - C_m\phi\phi_0\dot{H}  + \left(\frac{2\eta_{s}+\lambda}{H^2}\right)\dot{H}^2 
+ - \Bigl(\phi^2+2\phi_0\phi H \Bigr)\dot{C}_m + \frac{\gamma_aH-P}{H^2} \dot{H}
+ + \Bigl(\frac{\mathfrak{\mu}^{\text{chem}}_{a}-\mu_{b}}{a_0} + \frac{1}{2}\frac{q\phi}{a_0}- K_b H_0 (2H-H_0\tilde{c})\Bigr)\dot{\tilde{c}} + \frac{1}{ a_0 \tilde{k}} \dot{\tilde{c}}^2 
+ + \biggl[ -C_m (\phi+\phi_0H) + \frac{1}{2}\left( \rho_0+ \frac{q\tilde{c}}{a_0}\right)\biggr]\dot{\phi}
  + R_m\cdot\Bigl[ C_m(\dot{\phi}+\phi_0\dot{H}) + \dot{C}_m(\phi+\phi_0H) \Bigr]^2\Biggr\}A  ,$$
 
 where the evolution of areal capacitance is given by
