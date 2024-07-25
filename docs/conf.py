@@ -70,21 +70,26 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = "furo"
 # html_theme = "sphinx_rtd_theme"
 
-html_logo =  'https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/NuPhySim-logo.png'
-html_favicon ='https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/NuPhySim-logo.png'
-
-html_theme_options = {
-    "dark_css_variables": {
-        "color-brand-primary": "red",
-        "color-brand-content": "#CC3333",
-        "color-admonition-background": "orange",
-    },
-    "navigation_with_keys": True,
-    'logo_only': False,
-    'display_version': False,
-}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# html_logo =  'https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_static/NuPhySim_Logo_Dark.png'
+html_favicon ='https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_static/NuPhySim_Logo_Dark.png'
+
+
+html_theme_options = {
+    "dark_css_variables": {
+        "color-brand-primary": "red",
+        "color-brand-content": "#CC3333",
+        "color-admonition-background": "orange",},
+    "navigation_with_keys": True,
+    'logo_only': True,
+    'display_version': False,
+    "light_logo": "NuPhySim_Logo_Dark.png",
+    "dark_logo": "NuPhySim_Logo_Light.png",
+}
+
+
