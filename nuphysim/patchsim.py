@@ -1,4 +1,10 @@
-#----------------------------------------------Imports-----------------------------------------------
+# %% [markdown]
+# # Introduction
+# Authors: J. Giblin-Burnham
+# 
+
+# %% [markdown]
+# ## Imports#----------------------------------------------Imports-----------------------------------------------
 import sys
 import os
 import numpy as np
@@ -26,6 +32,7 @@ from scipy import signal
 # # plt.rcParams['mathtext.it'] = 'Times New Roman:italic'
 # # plt.rcParams['mathtext.bf'] = 'Times New Roman:bold'
 
+# %% [markdown]
 #-------------------------------------------Active Functions---------------------------------------------
 @njit
 def gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi):

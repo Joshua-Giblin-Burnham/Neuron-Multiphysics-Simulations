@@ -18,9 +18,10 @@ import furo
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
 sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('../nuphysim/'))
+sys.path.insert(0, os.path.abspath(os.path.join('..', 'nuphysim')))
+
 
 # -- Project information -----------------------------------------------------
 project = 'NuPhySim'
