@@ -37,7 +37,7 @@ potential. The underlying mechanics may reveal profound implications for underst
 
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Documentation
 
    nuphysim
