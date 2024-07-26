@@ -76,8 +76,8 @@ html_theme = "furo"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-# html_logo =  'https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_static/NuPhySim_Logo_Dark.png'
-html_favicon ='https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_static/NuPhySim_Logo_Dark.png'
+# html_logo =  'https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_static/NuPhySim_Graphic_Dark.png'
+html_favicon ='https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_static/NuPhySim_Graphic_Dark.png'
 
 
 html_theme_options = {
@@ -88,8 +88,8 @@ html_theme_options = {
     "navigation_with_keys": True,
     'logo_only': True,
     'display_version': False,
-    "light_logo": "NuPhySim_Graphic_Dark.svg",
-    "dark_logo": "NuPhySim_Graphic_Light.svg",
+    "light_logo": "NuPhySim_Graphic_Dark.png",
+    "dark_logo": "NuPhySim_Graphic_Light.png",
 }
 
 
