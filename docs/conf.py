@@ -88,8 +88,8 @@ html_theme_options = {
     "navigation_with_keys": True,
     'logo_only': True,
     'display_version': False,
-    "light_logo": "NuPhySim_Graphic_Dark.png",
-    "dark_logo": "NuPhySim_Graphic_Light.png",
+    "light_logo": "NuPhySim_Graphic_Dark.svg",
+    "dark_logo": "NuPhySim_Graphic_Light.svg",
 }
 
 
