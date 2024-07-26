@@ -1,3 +1,8 @@
+<p align="center">
+   <img width="700" height="500" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/\_static\NuPhySim_letter.png">
+</p>
+
+
 # Neuron Multiphysics Simulations
 
 ## Introduction

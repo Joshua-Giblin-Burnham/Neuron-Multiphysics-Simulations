@@ -13,6 +13,7 @@ __pycache__/
 *.pdb
 *.afdesign
 *.afdesign*
+_static\NuPhySim.afdesign
 
 # Data and figures
 data/
