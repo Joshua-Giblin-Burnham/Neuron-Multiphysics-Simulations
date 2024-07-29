@@ -1,5 +1,5 @@
 <p align="center">
-   <img width="550" height="350" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_static/NuPhySim_Graphic_Dark.svg">
+   <img width="550" height="350" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_static/NuPhySim_text_logo.svg">
 </p>
 
 
