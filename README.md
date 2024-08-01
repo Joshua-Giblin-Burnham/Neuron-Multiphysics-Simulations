@@ -23,7 +23,7 @@ View documentation here,  https://neuron-multiphysics-simulations.readthedocs.io
 ### PatchSim : Finite difference simulation of neuronal membrane patch
 
 <p align="center">
-   <img width="400" height="450" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/PatchSim.png">
+   <img width="350" height="475" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/PatchSim.png">
 </p>
 
 
