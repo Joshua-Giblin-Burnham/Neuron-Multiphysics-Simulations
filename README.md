@@ -10,7 +10,7 @@ Repository for code DPhil project simulating neuronal membrane, multiphysics and
 
 
 <p align="center">
-   <img width="700" height="500" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/Nuphysim.png">
+   <img width="900" height="700" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/Nuphysim.png">
 </p>
 
 
@@ -23,7 +23,7 @@ View documentation here,  https://neuron-multiphysics-simulations.readthedocs.io
 ### PatchSim : Finite difference simulation of neuronal membrane patch
 
 <p align="center">
-   <img width="350" height="475" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/PatchSim.png">
+   <img width="450" height="575" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/PatchSim.png">
 </p>
 
 
