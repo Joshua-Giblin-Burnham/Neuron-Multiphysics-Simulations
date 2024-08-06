@@ -10,7 +10,7 @@ Repository for code DPhil project simulating neuronal membrane, multiphysics and
 
 
 <p align="center">
-   <img width="700" height="500" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/Nuphysim.png">
+   <img width="900" height="700" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/Nuphysim.png">
 </p>
 
 
@@ -23,14 +23,16 @@ View documentation here,  https://neuron-multiphysics-simulations.readthedocs.io
 ### PatchSim : Finite difference simulation of neuronal membrane patch
 
 <p align="center">
-   <img width="400" height="450" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/PatchSim.png">
+   <img width="450" height="575" src="https://github.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/blob/main/docs/_figures/PatchSim.png">
 </p>
 
 
 As a simple application of our variational model we consider a infinitesimal patch of membrane with homogeneous properties such that all positional gradients are zero. Consequently, all integrals over $dA$ simplify to products with the area of the patch $A$ and we loss the terms associated with $d\dot{A}$. We treat the infinitesimal patch of membrane as an umbilical point, approximating the local curvature as spherical with radius $r_c = 1/H$. Therefore, the normal velocity $v_n$ becomes the radial velocity $\dot{r}_c = -\dot{H}/H^2$. Using the definition of the rate-of-deformation we can then define $\text{tr}|\boldsymbol{d}| \approx -\dot{H}/H$ and $\boldsymbol{d}:\boldsymbol{d}\approx 2(\dot{H}/H)^2$. Applying this simplification to the Rayleighian we define a Rayleighian for a finite membrane patch:  
 
 
-$$ \mathfrak{R} = \Biggl[ 2K_b (2H-H_0\tilde{c})\dot{H} - C_m \phi \phi_{0} \dot{H}  + \left( \frac{2\eta_{s} + \lambda }{H^2} \right)\dot{H}^2 - \Bigl(\phi^2 + 2 \phi_{0} \phi H \Bigr)\dot{C}_m + \frac{ \gamma_{a} H - P }{H^2} \dot{H} + \Bigl(\frac{ \mu_{a}^{\text{chem}} - \mu_{b} }{a_0} + \frac{1}{2}\frac{q \phi}{a_{0}}- K_{b} H_{0} (2H - H_{0}\tilde{c}) \Bigr) \dot{\tilde{c}} + \frac{1}{ a_{0} \tilde{k}} \dot{\tilde{c}}^2 + \biggl[ - C_{m} ( \phi + \phi_{0} H) + \frac{1}{2} \left( \rho_{0} + \frac{q \tilde{c}}{a_{0}} \right) \biggr]\dot{\phi} + R_{m} \cdot \Bigl[ C_{m} (\dot{\phi} + \phi_{0} \dot{H}) + \dot{C}_{m} (\phi + \phi_{0} H) \Bigr]^2 \Biggr] A  $$
+```math
+R = \Biggl( 2K_b (2H-H_0\tilde{c})\dot{H} - C_m \phi \phi_{0} \dot{H}  + \left( \frac{2\eta_{s} + \lambda }{H^2} \right)\dot{H}^2 - \Bigl(\phi^2 + 2 \phi_{0} \phi H \Bigr)\dot{C_m} + \frac{ gamma_{a} H - P}{H^2} \dot{H} + \Bigl(\frac{ \mu_{a}^{\text{chem}} - \mu_{b} }{a_0} + \frac{1}{2}\frac{q \phi}{a_{0}}- K_{b} H_{0} (2H - H_{0}\tilde{c}) \Bigr) \dot{\tilde{c}} + \frac{1}{ a_{0} \tilde{k}} \dot{\tilde{c}}^2 + \biggl( - C_{m} ( \phi + \phi_{0} H) + \frac{1}{2} \left( \rho_{0} + \frac{q \tilde{c}}{a_{0}} \right) \biggr)\dot{\phi} + R_{m} \cdot \Bigl( C_{m} (\dot{\phi} + \phi_{0} \dot{H}) + \dot{C}_{m} (\phi + \phi_{0} H) \Bigr)^2 \Biggr) A
+```
 
 where the evolution of areal capacitance is given by
 
