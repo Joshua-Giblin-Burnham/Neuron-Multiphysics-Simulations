@@ -6,7 +6,7 @@ Membrane Patch Simulation
 Finite difference simulation of neuronal membrane patch
 -------------------------------------------------------
 
-.. image::  https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/PatchSim.png
+.. image::  https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/PatchSim_graphic.png
 
 As a simple application of our variational model we consider a infinitesimal patch of membrane with homogeneous properties such that all positional gradients are zero. 
 Consequently, all integrals over :math:`dA` simplify to products with the area of the patch :math:`A` and we loss the terms associated with :math:`d\dot{A}`. We treat the infinitesimal 

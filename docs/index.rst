@@ -11,7 +11,7 @@ Authors: J. Giblin-Burnham
 
 Repository for DPhil project code simulating multiphysics and neuronal membrane dynamics with various FEM simulations at multiscale. 
 
-.. image::  https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/Nuphysim.png
+.. image::  https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_figures/Nuphysim_graphic.png
 
 Recent experiments have underscored the active nature of neuronal membranes, revealing an intricate coupling between their mechanical, electrophysiological, 
 and biochemical properties. To address this complexity, we develop a coupled mechano-electrophysiological and biochemical model for neuronal lipid bilayers. 
