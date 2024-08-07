@@ -77,7 +77,7 @@ html_theme = "furo"
 html_static_path = ['_static']
 
 # html_logo =  'https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_static/NuPhySim_Graphic_Dark.png'
-html_favicon ='https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_static/NuPhySim_Graphic_Dark.png'
+html_favicon  ='https://raw.githubusercontent.com/Joshua-Giblin-Burnham/Neuron-Multiphysics-Simulations/main/docs/_static/NuPhySim_short_logo.svg'
 
 
 html_theme_options = {
