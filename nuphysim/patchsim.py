@@ -34,7 +34,7 @@ from scipy import signal
 
 # %% [markdown]
 #-------------------------------------------Active Functions---------------------------------------------
-#@njit
+@njit
 def gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi):
     '''Calculate the active tension.
 
@@ -52,7 +52,7 @@ def gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi):
 
     return gamma_0 + xi * (tilde_c**2 )/ (tilde_c - k_c) + (C_D * phi**2)/2 
 
-#@njit
+@njit
 def Cm(H,d, epsilon):
     ''' Calculate the membrane capacitance.
 
@@ -67,7 +67,7 @@ def Cm(H,d, epsilon):
 
     return (epsilon/d)*(1-((H*d)**2)/4)
 
-#@njit
+@njit
 def Cm_dot(H, H_dot, d, epsilon):
     '''
     Calculate the derivative of the membrane capacitance.
@@ -83,7 +83,7 @@ def Cm_dot(H, H_dot, d, epsilon):
     '''
     return -epsilon*d*H*H_dot/2
 
-#@njit
+@njit
 def mu(tilde_c, tilde_c_m, mu_0a, R, T, a_0):
     '''Calculate the chemical potential of membrane.
 
@@ -101,7 +101,7 @@ def mu(tilde_c, tilde_c_m, mu_0a, R, T, a_0):
 
     return mu_0a/a_0  +  (R*T/a_0) * ( tilde_c and np.log( tilde_c / (tilde_c_m - tilde_c)) ) 
 
-#@njit
+@njit
 def mu_a(H, tilde_c, phi, args):
     '''Calculate the active chemical potential.
 
@@ -118,7 +118,7 @@ def mu_a(H, tilde_c, phi, args):
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q,  C_D, R, T, A = args
     return mu(tilde_c, tilde_c_m, mu_0a, R, T, a_0) + ((q*phi)/(2*a_0) )* phi - K_b * H_0 * (2 * H - H_0 * tilde_c)
 
-#@njit
+@njit
 def mu_b(c, c_0, mu_0b, R, T, a_0):
     '''Calculate the bulk chemical potential.
 
@@ -136,7 +136,7 @@ def mu_b(c, c_0, mu_0b, R, T, a_0):
 
     return mu_0b/a_0 + R*T * ( c and np.log(c /c_0) )
 
-#@njit
+@njit
 def tilde_k(H, tilde_c, phi, c, args):
     '''Calculate the Arrenius constant/ relative reaction rate.
 
@@ -154,7 +154,7 @@ def tilde_k(H, tilde_c, phi, c, args):
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q,  C_D, R, T, A = args
     return k_off*(  (c/k_c)*(tilde_c_m-tilde_c) - np.exp(-(mu_0a-mu_0b)/R*T)   )/(a_0* (mu_a(H, tilde_c, phi, args) - mu_b(c, c_0, mu_0b, R, T, a_0)))
 
-#@njit
+@njit
 def tilde(c,k_c):
     '''Calculate the Area fraction of chemical adsorbants.
 
@@ -171,7 +171,7 @@ def tilde(c,k_c):
 
 
 # #----------------------------------------Rayleighian Functions-------------------------------------------
-# #@njit
+# @njit
 # def Rayleighian(X, X_n, dt, args):
 
 #     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, q, R, T, A = args
@@ -260,7 +260,7 @@ def tilde(c,k_c):
 
 
 #----------------------------------------Rayleighian Functions-------------------------------------------
-# #@njit
+# @njit
 def Rayleighian(X, X_n, dt, args):
     '''Calculate the Rayleighian function.
 
@@ -509,20 +509,143 @@ class Constraints:
 #==========================================================================================================
 #                                       Define the Herzog model equations
 #==========================================================================================================
-alpha_n = lambda x: 0.001265 * (x + 14.273) / (1 - np.exp((x + 14.273) / (-10)))
-beta_n = lambda x: 0.125 * np.exp((x + 55) / (-2.5))
+@njit
+def alpha_n(phi):
+    """
+    Calculate the alpha_n value for the n-gate in the Hodgkin-Huxley model.
 
-alpha_m = lambda x: 11.49 / (1 + np.exp((x + 8.58) / (-8.47)))
-beta_m = lambda x: 11.49 / (1 + np.exp((x + 67.2) / 27.8))
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
 
-alpha_h = lambda x: 0.0658 * np.exp(-(x + 120) / 20.33)
-beta_h = lambda x: 3.0 / (1 + np.exp((x - 6.8) / (-12.998)))
+    Returns:
+    float: The rate constant alpha_n.
+    """
+    return 0.001265 * (phi + 14.273) / (1 - np.exp((phi + 14.273) / (-10)))
 
-alpha_o = lambda x: 1.032 / (1 + np.exp((x + 6.99) / (-14.87115)))
-beta_o = lambda x: 5.79 / (1 + np.exp((x + 130.4) / 22.9))
+@njit
+def beta_n(phi):
+    """
+    Calculate the beta_n value for the n-gate in the Hodgkin-Huxley model.
 
-alpha_p = lambda x: 0.06435 / (1 + np.exp((x + 73.26415) / 3.71928))
-beta_p = lambda x: 0.13496 / (1 + np.exp((x + 10.27853) / (-9.09334)))
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
+
+    Returns:
+    float: The rate constant beta_n.
+    """
+    return 0.125 * np.exp((phi + 55) / (-2.5))
+
+
+@njit
+def alpha_m(phi):
+    """
+    Calculate the alpha_m value for the m-gate in the Hodgkin-Huxley model.
+
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
+
+    Returns:
+    float: The rate constant alpha_m.
+    """
+    return 11.49 / (1 + np.exp((phi + 8.58) / (-8.47)))
+
+@njit
+def beta_m(phi):
+    """
+    Calculate the beta_m value for the m-gate in the Hodgkin-Huxley model.
+
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
+
+    Returns:
+    float: The rate constant beta_m.
+    """
+    return 11.49 / (1 + np.exp((phi + 67.2) / 27.8))
+
+
+@njit
+def alpha_h(phi):
+    """
+    Calculate the alpha_h value for the h-gate in the Hodgkin-Huxley model.
+
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
+
+    Returns:
+    float: The rate constant alpha_h.
+    """
+    return 0.0658 * np.exp(-(phi + 120) / 20.33)
+
+@njit
+def beta_h(phi):
+    """
+    Calculate the beta_h value for the h-gate in the Hodgkin-Huxley model.
+
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
+
+    Returns:
+    float: The rate constant beta_h.
+    """
+    return 3.0 / (1 + np.exp((phi - 6.8) / (-12.998)))
+
+
+@njit
+def alpha_o(phi):
+    """
+    Calculate the alpha_o value for a generic gate in the Hodgkin-Huxley model.
+
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
+
+    Returns:
+    float: The rate constant alpha_o.
+    """
+    return 1.032 / (1 + np.exp((phi + 6.99) / (-14.87115)))
+
+@njit
+def beta_o(phi):
+    """
+    Calculate the beta_o value for a generic gate in the Hodgkin-Huxley model.
+
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
+
+    Returns:
+    float: The rate constant beta_o.
+    """
+    return 5.79 / (1 + np.exp((phi + 130.4) / 22.9))
+
+
+@njit
+def alpha_p(phi):
+    """
+    Calculate the alpha_p value for a generic gate in the Hodgkin-Huxley model.
+
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
+
+    Returns:
+    float: The rate constant alpha_p.
+    """
+    return 0.06435 / (1 + np.exp((phi + 73.26415) / 3.71928))
+
+@njit
+def beta_p(phi):
+    """
+    Calculate the beta_p value for a generic gate in the Hodgkin-Huxley model.
+
+    Parameters:
+    phi (float): The membrane potential in millivolts (mV).
+
+    Returns:
+    float: The rate constant beta_p.
+    """
+    return 0.13496 / (1 + np.exp((phi + 10.27853) / (-9.09334)))
+
+
+
+
 
 
 def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename):
