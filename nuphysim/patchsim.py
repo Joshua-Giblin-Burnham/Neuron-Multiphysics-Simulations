@@ -34,7 +34,7 @@ from scipy import signal
 
 # %% [markdown]
 #-------------------------------------------Active Functions---------------------------------------------
-#@njit
+@njit
 def gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi):
     '''Calculate the active tension.
 
@@ -52,7 +52,7 @@ def gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi):
 
     return gamma_0 + xi * (tilde_c**2 )/ (tilde_c - k_c) + (C_D * phi**2)/2 
 
-#@njit
+@njit
 def Cm(H,d, epsilon):
     ''' Calculate the membrane capacitance.
 
@@ -67,7 +67,7 @@ def Cm(H,d, epsilon):
 
     return (epsilon/d)*(1-((H*d)**2)/4)
 
-#@njit
+@njit
 def Cm_dot(H, H_dot, d, epsilon):
     '''
     Calculate the derivative of the membrane capacitance.
@@ -83,7 +83,7 @@ def Cm_dot(H, H_dot, d, epsilon):
     '''
     return -epsilon*d*H*H_dot/2
 
-#@njit
+@njit
 def mu(tilde_c, tilde_c_m, mu_0a, R, T, a_0):
     '''Calculate the chemical potential of membrane.
 
@@ -101,7 +101,7 @@ def mu(tilde_c, tilde_c_m, mu_0a, R, T, a_0):
 
     return mu_0a/a_0  +  (R*T/a_0) * ( tilde_c and np.log( tilde_c / (tilde_c_m - tilde_c)) ) 
 
-#@njit
+@njit
 def mu_a(H, tilde_c, phi, args):
     '''Calculate the active chemical potential.
 
@@ -118,7 +118,7 @@ def mu_a(H, tilde_c, phi, args):
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q,  C_D, R, T, A = args
     return mu(tilde_c, tilde_c_m, mu_0a, R, T, a_0) + ((q*phi)/(2*a_0) )* phi - K_b * H_0 * (2 * H - H_0 * tilde_c)
 
-#@njit
+@njit
 def mu_b(c, c_0, mu_0b, R, T, a_0):
     '''Calculate the bulk chemical potential.
 
@@ -136,7 +136,7 @@ def mu_b(c, c_0, mu_0b, R, T, a_0):
 
     return mu_0b/a_0 + R*T * ( c and np.log(c /c_0) )
 
-#@njit
+@njit
 def tilde_k(H, tilde_c, phi, c, args):
     '''Calculate the Arrenius constant/ relative reaction rate.
 
@@ -154,7 +154,7 @@ def tilde_k(H, tilde_c, phi, c, args):
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q,  C_D, R, T, A = args
     return k_off*(  (c/k_c)*(tilde_c_m-tilde_c) - np.exp(-(mu_0a-mu_0b)/R*T)   )/(a_0* (mu_a(H, tilde_c, phi, args) - mu_b(c, c_0, mu_0b, R, T, a_0)))
 
-#@njit
+@njit
 def tilde(c,k_c):
     '''Calculate the Area fraction of chemical adsorbants.
 
@@ -171,7 +171,7 @@ def tilde(c,k_c):
 
 
 # #----------------------------------------Rayleighian Functions-------------------------------------------
-# #@njit
+# @njit
 # def Rayleighian(X, X_n, dt, args):
 
 #     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, q, R, T, A = args
@@ -260,7 +260,7 @@ def tilde(c,k_c):
 
 
 #----------------------------------------Rayleighian Functions-------------------------------------------
-# #@njit
+# @njit
 def Rayleighian(X, X_n, dt, args):
     '''Calculate the Rayleighian function.
 
