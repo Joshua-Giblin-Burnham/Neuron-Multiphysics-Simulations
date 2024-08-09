@@ -1,8 +1,7 @@
 nuphysim.patchsim package
 ===================
 
-
-Testing the documeent is referencing properly
+Finite difference simulation of neuronal membrane patch
 
 .. automodule:: nuphysim.patchsim
    :members:
