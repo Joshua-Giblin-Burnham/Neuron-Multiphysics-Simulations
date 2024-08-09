@@ -32,7 +32,7 @@ setup(
     packages=find_packages(include=('nuphysim', 'nuphysim.*')),
 
     # List of dependencies
-    install_requires = ["numpy", "matplotlib", "scipy", "absl-py", "biopython", "keras", "pypdf", "pypdf2", "scp", "paramiko", "sphinx_rtd_theme", "furo",],
+    install_requires = ["numpy", "matplotlib", "scipy", "absl-py", "keras", "pypdf2", "scp", "paramiko", "sphinx_rtd_theme", "furo",],
 
     extras_require={
         'docs': [

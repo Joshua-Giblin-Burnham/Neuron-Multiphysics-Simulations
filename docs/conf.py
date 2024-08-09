@@ -12,7 +12,6 @@
 #
 import os
 import sys  
-
 import sphinx_rtd_theme
 import furo
 
@@ -46,7 +45,7 @@ extensions = ['sphinx_rtd_theme',
 
 autosummary_generate = True
 napoleon_google_docstring = True
-napoleon_custom_sections = [('Returns', 'params_style'), ('Keywords Args', 'params_style')]
+napoleon_custom_sections = [('Keywords Args', 'params_style')] #('Returns', 'params_style')
 # napoleon_use_param = False
 # napoleon_use_ivar = True
 
