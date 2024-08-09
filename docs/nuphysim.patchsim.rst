@@ -1,8 +1,11 @@
 nuphysim.patchsim package
 ===================
 
-.. automodule:: nuphysim.patchsim
-   :members:
-   :undoc-members:
-   :show-inheritance:
+
+Testing the documeent is referencing properly
+
+.. .. automodule:: nuphysim.patchsim
+..    :members:
+..    :undoc-members:
+..    :show-inheritance:
 
