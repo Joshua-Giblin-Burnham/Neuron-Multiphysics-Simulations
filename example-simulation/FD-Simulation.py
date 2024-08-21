@@ -1,8 +1,11 @@
 #----------------------------------------------Import--------------------------------------------------
 import sys
-sys.path.insert(1, '..')
+import os
+sys.path.insert(1, os.getcwd())
+sys.path.insert(1, os.getcwd()+os.sep+"..")
 
 import nuphysim
+import numpy as np
 
 # Plotting import and settinngs
 import matplotlib as mpl
@@ -25,7 +28,7 @@ plt.rcParams['mathtext.bf'] = 'Times New Roman:bold'
 #-------------------------------------------Set Ouput file---------------------------------------------
 filename = sys.argv[1]+sys.argv[2]
 
-with open('Simulations'+os.sep+filename+".out", 'a') as f:
+with open(filename+".out", 'a') as f:
     f.write('Simulation type:'+ str(sys.argv[2])+'\n')
     f.write('\n')
 
@@ -83,10 +86,10 @@ rad = (1e6) * (1 / H0)                # um     # Cell radius
 A_m_0 = A(H0)                         # um2    # Initial area
 h_m_0 = 4e-3                          # um     # Membrane thickness
 
+
 #============================================================================================================
 #                                 Electrophysiological parameters for simulation
 #============================================================================================================
-
 E_rest = -49.1 # mV
 E_K = -92.34   # mV
 E_Na = 62.94   # mV  
@@ -100,18 +103,20 @@ G_Leak = 5.6e-6     # nS/um
 capa = 4.43e-5 # pF/um
 cappar = (capa*A0/d)
 
+
 #==========================================================================================================
 #                           Preallocate the variables and calculate the initial values
 #==========================================================================================================
-i_inj = 100 #100 #8e-8
+i_inj = 100 #8e-8
 I = np.zeros(Nt)
 I[int(Nt*0.65):int(Nt*0.8)] = i_inj
 
-
 arg  = (K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d)
 
+
 #-----------------------------------------------Minimisation------------------------------------------
-X, Xerr, V, t = nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename)
+X, Xerr, V, t = nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=True)
+
 
 
 #-------------------------------------------Plot Data------------------------------------------
@@ -159,7 +164,7 @@ ax[4].set_ylabel(r'$V (mV)$', rotation = 90)
 # ax[4].set_ylim(0,10000)
 
 fig.tight_layout()
-fig.savefig('Figures'+ os.sep +filename+'.pdf', bbox_inches = 'tight')
+fig.savefig('Figures'+ os.sep + filename+'.pdf', bbox_inches = 'tight')
 
 
 

@@ -170,95 +170,6 @@ def tilde(c,k_c):
 
 
 
-# #----------------------------------------Rayleighian Functions-------------------------------------------
-# @njit
-# def Rayleighian(X, X_n, dt, args):
-
-#     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, q, R, T, A = args
-    
-#     H, c, phi = X
-#     H_n, c_n, phi_n = X_n
-#     tilde_c, tilde_c_n = tilde(c,k_c), tilde(c_n,k_c)
-
-#     H_dot, tilde_c_dot, phi_dot = H-H_n/dt, tilde_c-tilde_c_n/dt, phi-phi_n/dt
-
-#     C_m =  Cm(H, d, epsilon)
-#     C_m_dot = Cm_dot(H, H_dot, d, epsilon)
-    
-#     R = ( 
-#         2 * K_b * (2 * H - H_0 * tilde_c) * H_dot 
-#         - C_m * phi * phi_0 * H_dot  
-#         + (2 * eta_s + lambda_0)*float(H and H_dot/H)**2 
-#         - (phi**2 + 2 * phi_0 * phi * H) * C_m_dot 
-#         + (gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * H - Pa) * H_dot * float(H and 1/H)**2
-        
-#         + 
-#         ( 0 
-#         + mu_a(H, tilde_c, phi, args)
-#         + mu_b(c, c_0, mu_0b, R, T, a_0)
-#         ) *tilde_c_dot 
-
-
-#          +  tilde_c_dot**2 /(tilde_k(H, tilde_c, phi, c, args)* a_0) 
-
-#         + 
-#         ( 0 
-#         - C_m * (phi + phi_0*H) 
-#         + 0.5 * (rho_m + (q * tilde_c)/a_0)
-#         ) * phi_dot 
-
-#         + R_m * (C_m*(phi_dot+phi_0*H_dot) - C_m_dot*(phi+phi_0*H))**2 
-
-#         ) * A
-
-#     return R
-
-
-
-# def Rayleighian(X, X_n, dt, args):
-
-#     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, q, R, T, d, A = args
-    
-#     H, c, phi = X
-#     H_n, c_n, phi_n = X_n
-#     tilde_c, tilde_c_n = tilde(c,k_c), tilde(c_n,k_c)
-
-#     H_dot, tilde_c_dot, phi_dot = H-H_n/dt, tilde_c-tilde_c_n/dt, phi-phi_n/dt
-
-#     C_m =  Cm(H, d, epsilon)
-#     C_m_dot = Cm_dot(H, H_dot, d, epsilon)
-    
-#     R = ( 
-#         2 * K_b * (2 * H - H_0 * tilde_c) * H_dot 
-#         - C_m * phi * phi_0 * H_dot  
-#         + (2 * eta_s + lambda_0)*float(H and H_dot/H)**2 
-#         - (phi**2 + 2 * phi_0 * phi * H) * C_m_dot 
-#         + (gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * H - Pa) * H_dot * float(H and 1/H)**2
-        
-#         + 
-#         ( 0 
-#         + mu_a(H, tilde_c, phi, args)
-#         + mu_b(c, c_0, mu_0b, R, T, a_0)
-#         ) *tilde_c_dot 
-
-
-#          +  tilde_c_dot**2 /(tilde_k(H, tilde_c, phi, c, args)* a_0) 
-
-#         + 
-#         ( 0 
-#         - C_m * (phi + phi_0*H) 
-#         + 0.5 * (rho_m + (q * tilde_c)/a_0)
-#         ) * phi_dot 
-
-#         + R_m * (C_m*(phi_dot+phi_0*H_dot) - C_m_dot*(phi+phi_0*H))**2 
-
-#         ) * A 
-
-#     return R
-
-
-
-
 #----------------------------------------Rayleighian Functions-------------------------------------------
 # @njit
 def Rayleighian(X, X_n, dt, args):
@@ -277,21 +188,22 @@ def Rayleighian(X, X_n, dt, args):
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d, m, h,o, p,  n, I = args
     
     H, c, phi = X
-    H_n, c_n, phi_n = X_n
-    tilde_c, tilde_c_n = tilde(c,k_c), tilde(c_n,k_c)
-
-    H_dot, tilde_c_dot, phi_dot = H-H_n/dt, tilde_c-tilde_c_n/dt, phi-phi_n/dt
-
-    C_m =  Cm(H, d, epsilon)
-    C_m_dot = Cm_dot(H, H_dot, d, epsilon)
-
-    # Calculate the ionic currents
-    I_Na_fast = (G_Na_fast * A0 /d)  * (m ** 3) * h * (phi - E_Na)**2
-    I_Na_slow = (G_Na_slow * A0 /d)  * o * p *        (phi - E_Na)**2
-    I_K       = (G_K * A0 / d)   * n *            (phi - E_K)**2
-    I_Leak    = (G_Leak * A0 /d) *                (phi - E_Leak)**2
+    H_dot, c_dot, phi_dot = (X-X_n)/dt
+    tilde_c, tilde_c_dot  = tilde(c,k_c), tilde(c_dot,k_c)
     
-    I_ion = I*phi - (I_Na_fast + I_Na_slow + I_K + I_Leak)
+    # H_n, c_n, phi_n = X_n
+    # tilde_c, tilde_c_n = tilde(c,k_c), tilde(c_n,k_c)
+    # H_dot, tilde_c_dot, phi_dot = (H-H_n)/dt, (tilde_c-tilde_c_n)/dt, (phi-phi_n)/dt
+
+    C_m, C_m_dot =  Cm(H, d, epsilon), Cm_dot(H, H_dot, d, epsilon)
+
+    # # Calculate the ionic currents
+    # I_Na_fast = (G_Na_fast * A0 /d)  * (m ** 3) * h * (phi - E_Na)**2
+    # I_Na_slow = (G_Na_slow * A0 /d)  * o * p *        (phi - E_Na)**2
+    # I_K       = (G_K * A0 / d)   * n *            (phi - E_K)**2
+    # I_Leak    = (G_Leak * A0 /d) *                (phi - E_Leak)**2
+    
+    I_ion = I #- (I_Na_fast + I_Na_slow + I_K + I_Leak)
     
     
     R = ( 
@@ -308,7 +220,7 @@ def Rayleighian(X, X_n, dt, args):
         ) *tilde_c_dot 
 
 
-         +  tilde_c_dot**2 /(tilde_k(H, tilde_c, phi, c, args[:-16])* a_0) 
+         +  tilde_c_dot**2 /(tilde_k(H, tilde_c, phi, c, args[:-14])* a_0) 
 
         + 
         ( 0 
@@ -316,9 +228,10 @@ def Rayleighian(X, X_n, dt, args):
         + 0.5 * (rho_m + (q * tilde_c)/a_0)
         ) * phi_dot 
 
-        + I_ion
-
-        + R_m * (C_m*(phi_dot+phi_0*H_dot) - C_m_dot*(phi+phi_0*H))**2 
+        + R_m * (I_ion)**2 
+        + R_m * (C_m*phi_dot)**2   
+        # + R_m * (C_m*(phi_dot+phi_0*H_dot) - C_m_dot*(phi+phi_0*H))**2 
+        # + R_m * (C_m*(phi_dot+phi_0*H_dot) - C_m_dot*(phi+phi_0*H) + I_ion)**2 
 
         ) * A0
 
@@ -397,21 +310,7 @@ def periodConditions(t, periods):
 
     return bool(np.sum(period))
 
-def PulseConstraints(self, t):
-    '''Define pulse constraints based on the time and internal periods.
 
-    Args:
-        t (float): Time.
-
-    Returns:
-        list: List of constraint dictionaries.
-    '''
-    if periodConditions(t, self.periods)==True :
-        Xc = wavePulse(t, self.A, self.f, self.wavelets, self.Tt, self.A_0 )
-        return  [{'type': 'eq', 'fun': lambda x: x[0] - Xc }] + [{'type': 'eq', 'fun': lambda x: x[1] }]
-    else: 
-        return [{'type': 'eq', 'fun': lambda x: x[1] }]
-    
 
 #-------------------------------------------Constraint Class---------------------------------------------
 class Constraints:
@@ -447,9 +346,13 @@ class Constraints:
         self.A_0 = A_0
         self.wavelets = wavelets
         self.periods = wavePeriod(f, wavelets, Tt)
+
+        baseConcentration = 0.2
+        baseCurvature =  0.5e-9
             
         if self.constraint == 'None':
-            self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[1]-0.2 }]
+            self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[1] - baseConcentration }]
+        
 
         elif self.constraint == 'Gaussian':
             self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[1] -  self.c_m*np.exp(-0.1*self.Nt*((t - self.Tt/2)/self.Tt)**2)}]
@@ -464,10 +367,31 @@ class Constraints:
             self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[0] - wavePulse(t, self.A, self.f, self.wavelets, self.Tt, self.A_0 ) }]
         
         elif self.constraint == 'UltrasoundPulse':
-            self.ConstraintFunction = PulseConstraints
+            self.ConstraintFunction = self.PulseConstraints
+
+        elif self.constraint == 'HodgkinHuxley':
+            self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[1] - baseConcentration},{'type': 'eq', 'fun': lambda x: x[0] - baseCurvature}]
 
         else:
             raise Exception("No Valid Constraint")
+
+
+    def PulseConstraints(self, t):
+        '''Define pulse constraints based on the time and internal periods.
+
+        Args:
+            t (float): Time.
+
+        Returns:
+            list: List of constraint dictionaries.
+        '''
+        if periodConditions(t, self.periods)==True :
+            Xc = wavePulse(t, self.A, self.f, self.wavelets, self.Tt, self.A_0 )
+            return  [{'type': 'eq', 'fun': lambda x: x[0] - Xc }] + [{'type': 'eq', 'fun': lambda x: x[1] }]
+        else: 
+            return [{'type': 'eq', 'fun': lambda x: x[1] }] 
+        
+
 
     def changeUltrasoundParameters(self, A = 1/1e-5, f = 1.8e7, A_0=1e6, wavelets=2):
         '''Change the parameters for the Ultrasound constraint.
@@ -505,6 +429,8 @@ class Constraints:
             list : List of constraint dictionaries.
         '''
         return self.ConstraintFunction(self, t)
+
+    
 
 #==========================================================================================================
 #                                       Define the Herzog model equations
@@ -648,7 +574,7 @@ def beta_p(phi):
 
 
 
-def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename):
+def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=False):
     '''Perform minimization using the Herzog model equations.
 
     Args:
@@ -707,12 +633,12 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename):
         # I[i]     = 0.01*Cm(X[i,0], d, epsilon)*(X[i+1,2]*0.001 - X[i,2]*0.001)/dt + I_ion 
     
 
-        # Update the H-H variables using Euler first order approximation
-        m[i + 1] = m[i] + dt * (alpha_m(X[i+1,2]*0.001) * (1 - m[i]) - beta_m(X[i+1,2]*0.001) * m[i])
-        n[i + 1] = n[i] + dt * (alpha_n(X[i+1,2]*0.001) * (1 - n[i]) - beta_n(X[i+1,2]*0.001) * n[i])
-        h[i + 1] = h[i] + dt * (alpha_h(X[i+1,2]*0.001) * (1 - h[i]) - beta_h(X[i+1,2]*0.001) * h[i])
-        o[i + 1] = o[i] + dt * (alpha_o(X[i+1,2]*0.001) * (1 - o[i]) - beta_o(X[i+1,2]*0.001) * o[i])
-        p[i + 1] = p[i] + dt * (alpha_p(X[i+1,2]*0.001) * (1 - p[i]) - beta_p(X[i+1,2]*0.001) * p[i])
+        # # Update the H-H variables using Euler first order approximation
+        # m[i + 1] = m[i] + dt * (alpha_m(X[i+1,2]*0.001) * (1 - m[i]) - beta_m(X[i+1,2]*0.001) * m[i])
+        # n[i + 1] = n[i] + dt * (alpha_n(X[i+1,2]*0.001) * (1 - n[i]) - beta_n(X[i+1,2]*0.001) * n[i])
+        # h[i + 1] = h[i] + dt * (alpha_h(X[i+1,2]*0.001) * (1 - h[i]) - beta_h(X[i+1,2]*0.001) * h[i])
+        # o[i + 1] = o[i] + dt * (alpha_o(X[i+1,2]*0.001) * (1 - o[i]) - beta_o(X[i+1,2]*0.001) * o[i])
+        # p[i + 1] = p[i] + dt * (alpha_p(X[i+1,2]*0.001) * (1 - p[i]) - beta_p(X[i+1,2]*0.001) * p[i])
 
         # A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d, m, h,o, p,  n, I = arg[-13:]
 
@@ -740,17 +666,17 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename):
         if constraint.constraint == 'UltrasoundPulse' and periodConditions(t[i], constraint.periods) == False :
             constraint.changeUltrasoundParameters(A_0=X[i+1,0], A=X[i+1,0]/5)
 
+        if verbose==True:
+            print(str(i)+'-'+str(opt['success'])+'\n')
 
-        # print(str(i)+'-'+str(opt['success'])+'\n')
-
-        # #-------------------------------------------Export data------------------------------------------
-        # with open('Simulations'+os.sep+filename+".out", 'a') as f:
-        #     f.write(str(i)+'-'+str(opt['success'])+'\n')
-        
-        # np.savetxt("data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
-        # np.savetxt("data"+os.sep+"X-"+filename+".csv",X,delimiter=',')    
-        # np.savetxt("data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
-        # np.savetxt("data"+os.sep+"V-"+filename+".csv",V,delimiter=',')
-        # np.savetxt("data"+os.sep+"XErr-"+filename+".csv",Xerr,delimiter=',')
+            #-------------------------------------------Export data------------------------------------------
+            with open(filename+".out", 'a') as f:
+                f.write(str(i)+'-'+str(opt['success'])+'\n')
+            
+            np.savetxt("data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
+            np.savetxt("data"+os.sep+"X-"+filename+".csv",X,delimiter=',')    
+            np.savetxt("data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
+            np.savetxt("data"+os.sep+"V-"+filename+".csv",V,delimiter=',')
+            np.savetxt("data"+os.sep+"XErr-"+filename+".csv",Xerr,delimiter=',')
 
     return X, Xerr, V, t
