@@ -115,9 +115,9 @@ arg  = (K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c
 
 
 #-----------------------------------------------Minimisation------------------------------------------
-X, Xerr, V, t = nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=True)
+# X, Xerr, V, t = nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=True)
 
-
+X, V, t = nuphysim.patchsim.FDsimulation(I, Nt, dt, arg, filename, verbose=False)
 
 #-------------------------------------------Plot Data------------------------------------------
 fig, ax = plt.subplots(5,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
