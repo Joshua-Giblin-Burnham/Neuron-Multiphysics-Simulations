@@ -7,24 +7,6 @@ sys.path.insert(1, os.getcwd()+os.sep+"..")
 import nuphysim
 import numpy as np
 
-# Plotting import and settinngs
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from mpl_toolkits.mplot3d import axes3d
-from matplotlib.ticker import MaxNLocator
-
-linewidth = 5.92765763889 # inch
-plt.rcParams["figure.figsize"] = (1.61*linewidth, linewidth)
-plt.rcParams['figure.dpi'] = 256
-plt.rcParams['font.size'] = 16
-plt.rcParams["font.family"] = "Times New Roman"
-
-plt.rcParams['mathtext.fontset'] = 'custom'
-plt.rcParams['mathtext.rm'] = 'Times New Roman'
-plt.rcParams['mathtext.it'] = 'Times New Roman:italic'
-plt.rcParams['mathtext.bf'] = 'Times New Roman:bold'
-
 #-------------------------------------------Set Ouput file---------------------------------------------
 filename = sys.argv[1]+sys.argv[2]
 
@@ -109,86 +91,14 @@ cappar = (capa*A0/d)
 #==========================================================================================================
 i_inj = 100 #8e-8
 I = np.zeros(Nt)
-I[int(Nt*0.65):int(Nt*0.8)] = i_inj
+I[int(Nt*0.45):int(Nt*0.65)] = i_inj
 
 arg  = (K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d)
 
 
 #-----------------------------------------------Minimisation------------------------------------------
-# X, Xerr, V, t = nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=True)
+X, Xerr, V, t = nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=True)
+nuphysim.patchsim.minimserPlot(X, V, I, t, k_c, filename)
 
-X, V, t = nuphysim.patchsim.FDsimulation(I, Nt, dt, arg, filename, verbose=False)
-
-#-------------------------------------------Plot Data------------------------------------------
-fig, ax = plt.subplots(5,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
-
-ax[0].plot(t[2:2300]*1e6, (X[2:2300,0]), label = r'$H$ (nm^1)') 
-ax[0].set_ylim(ax[0].get_ylim()[0], ax[0].get_ylim()[1])
-ax[0].set_xlabel(r't ($\mu$s)')
-ax[0].set_ylabel('$\Delta$ H (m$^{-1}$)', rotation = 90)
-# ax[0].legend()
-
-ax[1].plot(t[2:2300]*1e6, nuphysim.patchsim.tilde(X[2:2300,1], c_0), color =  ax[0]._get_lines.get_next_color(), label = r'$c$')
-ax[1].set_xlabel(r't ($\mu$s)')
-ax[1].set_ylabel(r'$\tilde{c}$', rotation = 90)
-ax[1].set_ylim(0, ax[1].get_ylim()[1])
-
-# ax1 = ax[1].twinx()
-# ax1.plot(t[2:], tilde(X[2:,1], c_0), ':', color =  ax[1].lines[-1].get_color(), label = r'$\tilde{c}$')
-# ax1.set_ylabel(r'$\tilde{c}$', rotation = 0)
-# ax1.set_ylim(0, ax1.get_ylim()[1])
-
-# handles0, labels0 = ax[1].get_legend_handles_labels()
-# handles1, labels1 = ax1.get_legend_handles_labels()
-# ax[1].legend(handles0+handles1, labels0+labels1, loc=[0.75, 0.4], frameon=False)
-
-ax[2].plot(t[2:2300]*1e6, X[2:2300,2], color =  ax[0]._get_lines.get_next_color(), label = r'$\phi$')
-ax[2].set_xlabel(r't ($\mu$s)', rotation = 0)
-ax[2].set_ylabel(r'$\phi (V)$', rotation = 90)
-ax[2].set_ylim(ax[2].get_ylim()[0], ax[2].get_ylim()[1])
-# ax[2].legend()
-# ax[2].set_ylim(0,10000)
-
-ax[3].plot(t[2:2300]*1e6, I[2:2300], color =  ax[0]._get_lines.get_next_color(), label = r'$I$')
-ax[3].set_xlabel(r't ($\mu$s)', rotation = 0)
-ax[3].set_ylabel(r'$I (A)$', rotation = 90)
-ax[3].set_ylim(ax[3].get_ylim()[0], ax[3].get_ylim()[1])
-# ax[3].legend()
-# ax[3].set_ylim(0,10000)
-
-ax[4].plot(t[2:2300]*1e6, V[2:2300], color =  ax[0]._get_lines.get_next_color(), label = r'$V$')
-ax[4].set_xlabel(r't ($\mu$s)', rotation = 0)
-ax[4].set_ylabel(r'$V (mV)$', rotation = 90)
-# ax[4].set_ylim(ax[4].get_ylim()[0], ax[4].get_ylim()[1])
-# ax[4].legend()
-# ax[4].set_ylim(0,10000)
-
-fig.tight_layout()
-fig.savefig('Figures'+ os.sep + filename+'.pdf', bbox_inches = 'tight')
-
-
-
-
- #============================================================================================================
-# #                                        Plot the Voltage vs. Time
-# #============================================================================================================
-# plt.figure(1)
-# plt.plot(t, V, linewidth=2)
-# plt.xlabel('Time (ms)')
-# plt.ylabel('V_m (mV)')
-# plt.gca().tick_params(axis='both', labelsize=16)
-# plt.show()
-
-# #============================================================================================================
-# #                                       Plot the Conductance vs. Time
-# #============================================================================================================
-# plt.figure(2)
-# p1, = plt.plot(t, ((G_Na_fast + G_Na_slow) * A0 / h_m) * (m ** 3) * h, 'g', linewidth=3)
-# p2, = plt.plot(t, (G_K * A0 / h_m) * n ** 4, 'm', linewidth=3)
-# p3, = plt.plot(t, G_Leak * A / h_m, 'b', linewidth=3)
-# plt.xlabel('time (ms)')
-# plt.ylabel('Conductance')
-# plt.title('Conductances for Sodium, Potassium and the Leak')
-# plt.show()
-# ```
-
+# X, t = nuphysim.patchsim.FDsimulation([H0, 0.2, E_rest], I, Tt, Nt, arg, filename, verbose=True)
+# nuphysim.patchsim.FDPlot(X, I, t, filename)
