@@ -10,7 +10,7 @@ import numpy as np
 #-------------------------------------------Set Ouput file---------------------------------------------
 filename = sys.argv[1]+sys.argv[2]
 
-with open(filename+".out", 'a') as f:
+with open("out"+os.sep+filename+".out", 'a') as f:
     f.write('Simulation type:'+ str(sys.argv[2])+'\n')
     f.write('\n')
 
@@ -63,7 +63,7 @@ phi_0 = 1e-9
 #                                 Geometric parameters for simulation
 #============================================================================================================
 A = lambda H: 4 * np.pi * ((1e6) * (1 / H))**2 
-H0  = 4.9e9                           # m-1    # Curvature
+H0  = 1.6e6                           # m-1    # Curvature
 rad = (1e6) * (1 / H0)                # um     # Cell radius
 A_m_0 = A(H0)                         # um2    # Initial area
 h_m_0 = 4e-3                          # um     # Membrane thickness
@@ -72,7 +72,7 @@ h_m_0 = 4e-3                          # um     # Membrane thickness
 #============================================================================================================
 #                                 Electrophysiological parameters for simulation
 #============================================================================================================
-E_rest = -49.1 # mV
+E_rest = -0.79 #-49.1 # mV
 E_K = -92.34   # mV
 E_Na = 62.94   # mV  
 E_Leak = -54.3 # mV
@@ -89,7 +89,7 @@ cappar = (capa*A0/d)
 #==========================================================================================================
 #                           Preallocate the variables and calculate the initial values
 #==========================================================================================================
-i_inj = 100 #8e-8
+i_inj = 0.01 #8e-8
 I = np.zeros(Nt)
 I[int(Nt*0.45):int(Nt*0.65)] = i_inj
 
@@ -97,8 +97,8 @@ arg  = (K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c
 
 
 #-----------------------------------------------Minimisation------------------------------------------
-X, Xerr, V, t = nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=True)
-nuphysim.patchsim.minimserPlot(X, V, I, t, k_c, filename)
+# X, Xerr, V, t = nuphysim.patchsim.minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=True)
+# nuphysim.patchsim.minimserPlot(X, V, I, t, k_c, filename)
 
-# X, t = nuphysim.patchsim.FDsimulation([H0, 0.2, E_rest], I, Tt, Nt, arg, filename, verbose=True)
-# nuphysim.patchsim.FDPlot(X, I, t, filename)
+X, t = nuphysim.patchsim.FDsimulation([H0, 0, E_rest], I, Tt, Nt, arg, filename, verbose=True)
+nuphysim.patchsim.FDPlot(X, I, t, filename)

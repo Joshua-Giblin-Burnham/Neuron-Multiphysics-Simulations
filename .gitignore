@@ -19,6 +19,7 @@ _static\NuPhySim.afdesign
 # Data and figures
 data/
 example-simulation/Figures/
+example-simulation/out/
 # obsolete/
 # misc/
 experimental-data/

@@ -152,7 +152,7 @@ def tilde_k(H, tilde_c, phi, c, args):
     '''
 
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q,  C_D, R, T, A = args
-    return k_off*(  (c/k_c)*(tilde_c_m-tilde_c) - np.exp(-(mu_0a-mu_0b)/R*T)   )/(a_0* (mu_a(H, tilde_c, phi, args) - mu_b(c, c_0, mu_0b, R, T, a_0)))
+    return k_off*(  (c/c_0)*(tilde_c_m-tilde_c) - np.exp(-(mu_0a-mu_0b)/R*T)   )/(a_0* (mu(tilde_c, tilde_c_m, mu_0a, R, T, a_0) - mu_b(c, c_0, mu_0b, R, T, a_0)))
 
 @njit
 def tilde(c,k_c):
@@ -172,7 +172,7 @@ def tilde(c,k_c):
 
 #----------------------------------------Rayleighian Functions-------------------------------------------
 # @njit
-def Rayleighian(X, X_n, dt, args):
+def Rayleighian(X_n, X, dt, args):
     '''Calculate the Rayleighian function.
 
     Args:
@@ -188,7 +188,7 @@ def Rayleighian(X, X_n, dt, args):
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d, m, h,o, p,  n, I = args
     
     H, c, phi = X
-    H_dot, c_dot, phi_dot = (X-X_n)/dt
+    H_dot, c_dot, phi_dot = -(X-X_n)/dt
     tilde_c, tilde_c_dot  = tilde(c,k_c), tilde(c_dot,k_c)
     
     # H_n, c_n, phi_n = X_n
@@ -347,30 +347,29 @@ class Constraints:
         self.wavelets = wavelets
         self.periods = wavePeriod(f, wavelets, Tt)
 
-        baseConcentration = 0.2
-        baseCurvature =  0.5e-9
+        baseConcentration = 0 #0.2
+        baseCurvature = 1.6e6 
             
         if self.constraint == 'None':
-            self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[1] - baseConcentration }]
+            self.ConstraintFunction = lambda t : [{'type': 'eq', 'fun': lambda x: x[1] - baseConcentration }]
         
-
         elif self.constraint == 'Gaussian':
-            self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[1] -  self.c_m*np.exp(-0.1*self.Nt*((t - self.Tt/2)/self.Tt)**2)}]
+            self.ConstraintFunction = lambda t : [{'type': 'eq', 'fun': lambda x: x[1] -  self.c_m*np.exp(-0.1*self.Nt*((t - self.Tt/2)/self.Tt)**2)}]
 
         elif self.constraint == 'Sigmoid':
-            self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[1] -  1/(1+self.c_m*np.exp(-0.1*( t - self.Tt/2 )/self.dt))}]
+            self.ConstraintFunction = lambda t : [{'type': 'eq', 'fun': lambda x: x[1] -  (1/(1+self.c_m*np.exp(-0.1*( t - self.Tt/2 )/self.dt))+0.01)}]
         
         elif self.constraint == 'Skewwed':
-            self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[1] -  (self.c_m/2)*np.exp(-0.015*self.Nt*((t-self.t0)/self.Tt)**2)*(1-special.erf(-1e8*(t-self.t0)) ) }]
+            self.ConstraintFunction = lambda t : [{'type': 'eq', 'fun': lambda x: x[1] -  (self.c_m/2)*np.exp(-0.015*self.Nt*((t-self.t0)/self.Tt)**2)*(1-special.erf(-1e8*(t-self.t0)) ) }]
             
         elif self.constraint == 'Ultrasound':
-            self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[0] - wavePulse(t, self.A, self.f, self.wavelets, self.Tt, self.A_0 ) }]
+            self.ConstraintFunction = lambda t : [{'type': 'eq', 'fun': lambda x: x[0] - wavePulse(t, self.A, self.f, self.wavelets, self.Tt, self.A_0)+ 0.01 }]
         
         elif self.constraint == 'UltrasoundPulse':
             self.ConstraintFunction = self.PulseConstraints
 
         elif self.constraint == 'HodgkinHuxley':
-            self.ConstraintFunction = lambda self, t : [{'type': 'eq', 'fun': lambda x: x[1] - baseConcentration},{'type': 'eq', 'fun': lambda x: x[0] - baseCurvature}]
+            self.ConstraintFunction = lambda t : [{'type': 'eq', 'fun': lambda x: x[1] - baseConcentration},{'type': 'eq', 'fun': lambda x: x[0] - baseCurvature}]
         
         elif self.constraint == 'FD':
             None
@@ -388,11 +387,14 @@ class Constraints:
         Returns:
             list: List of constraint dictionaries.
         '''
+
+        baseConcentration = 0 #0.2
+
         if periodConditions(t, self.periods)==True :
-            Xc = wavePulse(t, self.A, self.f, self.wavelets, self.Tt, self.A_0 )
-            return  [{'type': 'eq', 'fun': lambda x: x[0] - Xc }] + [{'type': 'eq', 'fun': lambda x: x[1] }]
+            Xc = wavePulse(t, self.A, self.f, self.wavelets, self.Tt, self.A_0 )+0.01
+            return  [{'type': 'eq', 'fun': lambda x: x[0] - Xc }] + [{'type': 'eq', 'fun': lambda x: x[1] - baseConcentration }]
         else: 
-            return [{'type': 'eq', 'fun': lambda x: x[1] }] 
+            return [{'type': 'eq', 'fun': lambda x: x[1] - baseConcentration  }] 
         
 
 
@@ -431,7 +433,7 @@ class Constraints:
         Returns:
             list : List of constraint dictionaries.
         '''
-        return self.ConstraintFunction(self, t)
+        return self.ConstraintFunction(t)
 
     
 
@@ -676,7 +678,7 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=False):
             print(str(i)+'-'+str(opt['success'])+'\n')
 
             #-------------------------------------------Export data------------------------------------------
-            with open(filename+".out", 'a') as f:
+            with open("out"+os.sep+filename+".out", 'a') as f:
                 f.write(str(i)+'-'+str(opt['success'])+'\n')
             
             np.savetxt("data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
@@ -689,124 +691,206 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=False):
 
 
 
-def FDsimulation(X0, I, Tt, Nt, arg, filename, verbose=False):
+# def FDsimulation(X0, I, Tt, Nt, args, filename, verbose=False):
+#     '''  
+
+#     '''
+#     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
+
+#     c_eq = c_0*k_c*np.exp(-(mu_0a-mu_0b)/R*T)
+#     g_m = 1/(2*R_m)
+#     f=1
+
+#     alpha_H = np.array([
+#     [4*Pa, -4*gamma_0, (rho_0*epsilon*phi_0-d**3*Pa)/d, (gamma_0*d**3 - 16*K_b*d + 4*phi_0**2)/d, -(8+3*rho_0)/4, 4*d*(K_b*d - epsilon*phi_0), (epsilon*d**3*phi_0)/2, (3*epsilon*d**3*phi_0**2)/4, 0, 0, 0, 0],
+#     [0, (4*xi*f)/a_0, (8*a_0*K_b*H_0*d + q*epsilon*phi_0)/(a_0*d), (xi*d*f)/a_0, (8*a_0*K_b*H_0*d**2 - 3*q*epsilon*d*phi_0)/(4*a_0), 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, -(epsilon*d*rho_0)/2, -2*epsilon*d*phi_0, 0, -(epsilon*d**3*phi_0)/2, 0, 0, 0, 0, 0],
+#     [0, 0, 0, -(epsilon*d*q)/(2*a_0), 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#     ],  dtype=float)
+
+
+#     beta_H = np.array([
+#     [0, 0, 16*phi_0, 0, -16*phi_0*d**2, 0, 3*phi_0*d**4, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, -8*d**2, 0, 2*d**4, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#     ],  dtype=float)
+
+#     alpha_c = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [1, -(2*a_0*H_0*K_b)/(R*T*np.log(c_eq)), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [q/(2*R*T*np.log(c_eq)), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [a_0*H_0**2/(2*R*T*np.log(c_eq)), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#     ],  dtype=float)
+
+#     alpha_phi = np.array([
+#     [   (128*d**2*g_m*rho_0*(2*eta_s+lambda_0)+64*Pa*phi_0*epsilon**2)/epsilon**2,
+#         (phi_0*(128*d*g_m*(2*eta_s+lambda_0) - 64*epsilon*gamma_0))/epsilon,
+#         (16*epsilon**2*phi_0*alpha_H[0,2] - 64*epsilon**2*Pa*d**2*phi_0 - 32*d**4*g_m*rho_0*(2*eta_s+lambda_0))/epsilon**2,
+#         (phi_0*(16*alpha_H[0,3] - 64*epsilon*gamma_0*d**2 -64*g_m*(2*eta_s+lambda_0)*d**3))/epsilon,
+#         4*phi_0*(4*alpha_H[0,4]-4*d**2*alpha_H[0,2]-3*Pa*d**4),
+#         (4*phi_0*(4*epsilon*alpha_H[0,5] - 4*epsilon*d**2*alpha_H[0,3] - 3*epsilon*gamma_0*d**4 - 2*g_m*(2*eta_s+lambda_0)*d**5))/epsilon,
+#         phi_0*(16*alpha_H[0,6]-16*d**2*alpha_H[0,4]+3*alpha_H[0,2]*d**4),
+#         phi_0*(16*alpha_H[0,7]-16*d**2*alpha_H[0,5]+3*alpha_H[0,3]*d**4),
+#         phi_0*(-16*d**2*alpha_H[0,6]+3*alpha_H[0,4]*d**4),
+#         phi_0*(-16*d**2*alpha_H[0,7]+3*alpha_H[0,5]*d**4),
+#         3*alpha_H[0,6]*d**4,
+#         3*alpha_H[0,7]*d**4 ],
+
+#     [   (64*g_m*q*d**2*(2*eta_s+lambda_0))/(a_0*epsilon**2),
+#         (64*phi_0*xi*f)/a_0,
+#         (16*(8*a_0*epsilon*d*K_b*H_0*phi_0 + q*epsilon**2*phi_0**2 - g_m*q*d**5*(2*eta_s+lambda_0)))/(a_0*epsilon*d),
+#         (16*xi*d*phi_0*(1-4*d**2)*f)/a_0,
+#         (4*phi_0*(-24*K_b*H_0*a_0*d**2 - 7*epsilon*q*d*phi_0))/a_0,
+#         (4*xi*d**3*phi_0*(3*d-4)*f)/a_0,
+#         (-8*d**3*phi_0*(a_0*d*K_b*H_0 + epsilon*q*phi_0))/a_0,
+#         (3*xi*d**5*phi_0*f)/a_0,
+#         (14*xi*d**4*phi_0*f)/a_0,
+#         0, 0, 0 ],
+
+#     [   (128*g_m*(2*eta_s+lambda_0)*d)/epsilon,
+#         -32*Pa*d**2,
+#         (32*epsilon*d**2*gamma_0 - 64*g_m*d**3*(2*eta_s+lambda_0))/epsilon,
+#         -8*(d**2*alpha_H[0,2] + epsilon*d*phi_0*rho_0 - d**4*Pa),
+#         -8*(d**2*alpha_H[0,3] + gamma_0*d**4 + 4*epsilon*d*phi_0 - (g_m*(2*eta_s+lambda_0)*d**5)/epsilon),
+#         -2*(4*d**3*alpha_H[0,4] - d**4*alpha_H[0,2] - 4*epsilon*d**3*rho_0*phi_0),
+#         (2*d**4*alpha_H[0,3] - 8*d**2*alpha_H[0,5] + 24*epsilon*d**3*phi_0**2),
+#         (2*d**4*alpha_H[0,4] - 8*d**2*alpha_H[0,6] + 24*epsilon*d**3*phi_0**2),
+#         2*(3*alpha_H[0,5]*d**4-8*d**2*alpha_H[0,7] + 24*epsilon*d**3*phi_0**2),
+#         2*(3*alpha_H[0,6]*d**4-8*d**2*alpha_H[0,7] + 24*epsilon*d**3*phi_0**2),
+#         2*alpha_H[0,7]*d**4,
+#         2*alpha_H[0,7]*d**4 ],
+    
+#     [0,0,0,4*epsilon*d*gamma_0*phi_0,0,2*d**3*alpha_H[0,3],2*d**3*alpha_H[0,4],0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 2*d**3*alpha_H[0,5], 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#     ],  dtype=float)
+
+#     beta_phi =np.array( [
+#     [128*d**2*(2*eta_s + lambda_0)/(epsilon**2*R_m), 0, 64*(4*phi_0**2*epsilon**2*R_m - d**4*(2*eta_s + lambda_0))/(epsilon**2*R_m), 0, 8*d**2*(64*phi_0**2*epsilon**2*R_m - d**4*(2*eta_s + lambda_0))/(epsilon**2*R_m), 160*d**4*phi_0**2, 0, -96*d**3*phi_0**2, 0, 9*d**8*phi_0**2, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, -128*d**2*phi_0, -24*d**6*phi_0, 160*d**4*phi_0, 6*d**5*phi_0, -32*d**6*phi_0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 64*d**4, 0, -32*d**6, 0, 4*d**8, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#     ],  dtype=float)
+
+#     t, dt = np.linspace(0,Tt,Nt), Tt/Nt
+
+#     H = np.zeros(Nt)
+#     tilde_c = X0[1]*np.ones(Nt)
+#     phi = np.zeros(Nt)
+
+#     H[0], tilde_c[0], phi[0] = X0
+
+#     for i in range(Nt-1):
+#         x = np.array([H[i],tilde_c[i],phi[i],tilde_c[i]*phi[i],phi[i]**2,tilde_c[i]**2,tilde_c[i]*phi[i]**2])
+#         h = np.array([1,H[i],H[i]**2,H[i]**3,H[i]**4,H[i]**5,H[i]**6])
+        
+#         L = np.outer(x,h)
+
+#         # Calculate dot(H)
+#         # H[i+1] = H[i] + dt*( 1 / (2 * (2 * eta_s - lambda_0)*(4 - d**2 * H[i]**2)) )*( np.trace(alpha_H.T @ L) - (epsilon * R_m * I[i] / d)*np.trace(beta_H.T@ L)) 
+    
+#         # Calculate dot(c)
+#         # tilde_c[i+1] = tilde_c[i] + dt * ( (k_on - k_c * k_off) / (2 * k_c) )*np.trace(alpha_c.T @ L)
+
+#         # Calculate dot(phi)
+#         phi[i+1] = phi[i] + dt*(2 /( (2 * eta_s - lambda_0)* (4 - d**2 * H[i]**2)**3))*( np.trace(alpha_phi.T @ L) - (epsilon * R_m * I[i] / d)*np.trace(beta_phi.T @ L))
+        
+#         if verbose==True:
+#             print(str(i)+'-[',[H[i], tilde_c[i], phi[i]],']\n')
+
+#             np.savetxt("data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
+#             np.savetxt("data"+os.sep+"X-"+filename+".csv",np.array([H, tilde_c, phi]),delimiter=',')    
+#             np.savetxt("data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
+
+#     return np.array([H, tilde_c, phi]), t
+
+
+
+
+
+def dphi_n(H, tilde_c, phi, I, args):
+    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
+    
+    g_m = 1/(2*R_m)
+    chi_phi = 0.5 * (phi_0*H - 2*R_m*I) # + (rho_0*a_0 + q*tilde_c) / (2*Cm(H,d,epsilon)*a_0))
+    
+    term1 = I - g_m*(phi+ phi_0*H)
+
+    term2 = (g_m/ (2*Cm(H,d,epsilon))) * (rho_0 + q*tilde_c/ a_0)
+    
+    term3_1 = 4 * phi_0 * Pa  - 2 * d**2 * Pa * ( phi + (4*gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi)*phi_0) / (2*d**2*Pa) ) * H
+
+    term3_2 = ( 2 * d**2 * gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * phi - 4*K_b*H_0 * phi_0 * tilde_c + (4*epsilon*chi_phi*phi_0 - 3*d**2*Pa)/d*phi_0) * H**2
+    term3_3 = 4*K_b*H_0*d**2 * (phi* (tilde_c- 2*epsilon*chi_phi*phi_0 / (K_b*H_0*d)) + (3*gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi)*d**2 - 16*K_b) / (4*K_b*H_0*d**2) * phi_0) * H**3
+    term3_4 = (2*chi_phi * epsilon * d**3 * phi * (phi+ (4*K_b*d - epsilon*phi_0**2) / (chi_phi*epsilon*d**2)) - 6*d**2*phi_0*K_b*H_0*(tilde_c+ 2*epsilon*chi_phi*phi_0 / (K_b*H_0*d))) * H**4
+    term3_5 = epsilon*d**3*phi_0 * (phi* (phi+ 6*chi_phi) + (12*K_b) / (epsilon*d)) * H**5
+    term3_6 = -3*epsilon*d**3*phi_0**2 * (phi+ 3*chi_phi) * H**6
+    
+    term3 = term3_1 + term3_2 + term3_3 + term3_4 + term3_5 + term3_6
+    
+    term3 *= -epsilon / (8*d*(2*eta_s + lambda_0))
+    
+    dphi = -(1/Cm(H,d,epsilon)) * (term1 + term2 + term3)
+    
+    return dphi
+
+def dH_n(H, phi, tilde_c, I, args):
+    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
+
+    chi_phi = 0.5 * (phi_0*H - 2*R_m*I) # + (rho_0*a_0 + q*tilde_c) / (2*Cm(H,d,epsilon)*a_0))
+    
+    term1 = Pa - gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * H
+    term2 = -2*K_b*H_0 * (tilde_c- epsilon * chi_phi * phi_0 / (K_b * H_0 * d)) * H**2
+    term3 = -chi_phi * epsilon * d * (phi+ 4*K_b / (chi_phi * epsilon * d)) * H**3
+    term4 = -0.5 * epsilon * d * phi_0 * (phi+ 3*chi_phi) * H**4
+    
+    dH = (1 / (2*(2*eta_s + lambda_0))) * (term1 + term2 + term3 + term4)
+    return dH
+
+
+
+def FDsimulation(X0, I, Tt, Nt, args, filename, verbose=False):
     '''  
 
     '''
-    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = arg
-
-    c_eq = c_0*k_c*np.exp(-(mu_0a-mu_0b)/R*T)
-    g_m = 1/(2*R_m)
-    f=1
-
-    alpha_H = np.array([
-    [4*Pa, -4*gamma_0, (rho_0*epsilon*phi_0-d**3*Pa)/d, (gamma_0*d**3 - 16*K_b*d + 4*phi_0**2)/d, -(8+3*rho_0)/4, 4*d*(K_b*d - epsilon*phi_0), (epsilon*d**3*phi_0)/2, (3*epsilon*d**3*phi_0**2)/4, 0, 0, 0, 0],
-    [0, (4*xi*f)/a_0, (8*a_0*K_b*H_0*d + q*epsilon*phi_0)/(a_0*d), (xi*d*f)/a_0, (8*a_0*K_b*H_0*d**2 - 3*q*epsilon*d*phi_0)/(4*a_0), 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, -(epsilon*d*rho_0)/2, -2*epsilon*d*phi_0, 0, -(epsilon*d**3*phi_0)/2, 0, 0, 0, 0, 0],
-    [0, 0, 0, -(epsilon*d*q)/(2*a_0), 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ],  dtype=float)
-
-
-    beta_H = np.array([
-    [0, 0, 16*phi_0, 0, -16*phi_0*d**2, 0, 3*phi_0*d**4, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, -8*d**2, 0, 2*d**4, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ],  dtype=float)
-
-    alpha_c = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, -(2*a_0*H_0*K_b)/(R*T*np.log(c_eq)), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [q/(2*R*T*np.log(c_eq)), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [a_0*H_0**2/(2*R*T*np.log(c_eq)), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ],  dtype=float)
-
-    alpha_phi = np.array([
-    [   (128*d**2*g_m*rho_0*(2*eta_s+lambda_0)+64*Pa*phi_0*epsilon**2)/epsilon**2,
-        (phi_0*(128*d*g_m*(2*eta_s+lambda_0) - 64*epsilon*gamma_0))/epsilon,
-        (16*epsilon**2*phi_0*alpha_H[0,2] - 64*epsilon**2*Pa*d**2*phi_0 - 32*d**4*g_m*rho_0*(2*eta_s+lambda_0))/epsilon**2,
-        (phi_0*(16*alpha_H[0,3] - 64*epsilon*gamma_0*d**2 -64*g_m*(2*eta_s+lambda_0)*d**3))/epsilon,
-        4*phi_0*(4*alpha_H[0,4]-4*d**2*alpha_H[0,2]-3*Pa*d**4),
-        (4*phi_0*(4*epsilon*alpha_H[0,5] - 4*epsilon*d**2*alpha_H[0,3] - 3*epsilon*gamma_0*d**4 - 2*g_m*(2*eta_s+lambda_0)*d**5))/epsilon,
-        phi_0*(16*alpha_H[0,6]-16*d**2*alpha_H[0,4]+3*alpha_H[0,2]*d**4),
-        phi_0*(16*alpha_H[0,7]-16*d**2*alpha_H[0,5]+3*alpha_H[0,3]*d**4),
-        phi_0*(-16*d**2*alpha_H[0,6]+3*alpha_H[0,4]*d**4),
-        phi_0*(-16*d**2*alpha_H[0,7]+3*alpha_H[0,5]*d**4),
-        3*alpha_H[0,6]*d**4,
-        3*alpha_H[0,7]*d**4 ],
-
-    [   (64*g_m*q*d**2*(2*eta_s+lambda_0))/(a_0*epsilon**2),
-        (64*phi_0*xi*f)/a_0,
-        (16*(8*a_0*epsilon*d*K_b*H_0*phi_0 + q*epsilon**2*phi_0**2 - g_m*q*d**5*(2*eta_s+lambda_0)))/(a_0*epsilon*d),
-        (16*xi*d*phi_0*(1-4*d**2)*f)/a_0,
-        (4*phi_0*(-24*K_b*H_0*a_0*d**2 - 7*epsilon*q*d*phi_0))/a_0,
-        (4*xi*d**3*phi_0*(3*d-4)*f)/a_0,
-        (-8*d**3*phi_0*(a_0*d*K_b*H_0 + epsilon*q*phi_0))/a_0,
-        (3*xi*d**5*phi_0*f)/a_0,
-        (14*xi*d**4*phi_0*f)/a_0,
-        0, 0, 0 ],
-
-    [   (128*g_m*(2*eta_s+lambda_0)*d)/epsilon,
-        -32*Pa*d**2,
-        (32*epsilon*d**2*gamma_0 - 64*g_m*d**3*(2*eta_s+lambda_0))/epsilon,
-        -8*(d**2*alpha_H[0,2] + epsilon*d*phi_0*rho_0 - d**4*Pa),
-        -8*(d**2*alpha_H[0,3] + gamma_0*d**4 + 4*epsilon*d*phi_0 - (g_m*(2*eta_s+lambda_0)*d**5)/epsilon),
-        -2*(4*d**3*alpha_H[0,4] - d**4*alpha_H[0,2] - 4*epsilon*d**3*rho_0*phi_0),
-        (2*d**4*alpha_H[0,3] - 8*d**2*alpha_H[0,5] + 24*epsilon*d**3*phi_0**2),
-        (2*d**4*alpha_H[0,4] - 8*d**2*alpha_H[0,6] + 24*epsilon*d**3*phi_0**2),
-        2*(3*alpha_H[0,5]*d**4-8*d**2*alpha_H[0,7] + 24*epsilon*d**3*phi_0**2),
-        2*(3*alpha_H[0,6]*d**4-8*d**2*alpha_H[0,7] + 24*epsilon*d**3*phi_0**2),
-        2*alpha_H[0,7]*d**4,
-        2*alpha_H[0,7]*d**4 ],
-    
-    [0,0,0,4*epsilon*d*gamma_0*phi_0,0,2*d**3*alpha_H[0,3],2*d**3*alpha_H[0,4],0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 2*d**3*alpha_H[0,5], 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ],  dtype=float)
-
-    beta_phi =np.array( [
-    [128*d**2*(2*eta_s + lambda_0)/(epsilon**2*R_m), 0, 64*(4*phi_0**2*epsilon**2*R_m - d**4*(2*eta_s + lambda_0))/(epsilon**2*R_m), 0, 8*d**2*(64*phi_0**2*epsilon**2*R_m - d**4*(2*eta_s + lambda_0))/(epsilon**2*R_m), 160*d**4*phi_0**2, 0, -96*d**3*phi_0**2, 0, 9*d**8*phi_0**2, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, -128*d**2*phi_0, -24*d**6*phi_0, 160*d**4*phi_0, 6*d**5*phi_0, -32*d**6*phi_0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 64*d**4, 0, -32*d**6, 0, 4*d**8, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ],  dtype=float)
+    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
 
     t, dt = np.linspace(0,Tt,Nt), Tt/Nt
 
     H = np.zeros(Nt)
-    tilde_c = X0[1]*np.ones(Nt)
-    phi = np.zeros(Nt)
+    tilde_c= X0[1]*np.ones(Nt)
+    phi= np.zeros(Nt)
 
     H[0], tilde_c[0], phi[0] = X0
-
-    for i in range(Nt-1):
-        x = np.array([H[i],tilde_c[i],phi[i],tilde_c[i]*phi[i],phi[i]**2,tilde_c[i]**2,tilde_c[i]*phi[i]**2])
-        h = np.array([1,H[i],H[i]**2,H[i]**3,H[i]**4,H[i]**5,H[i]**6])
-        
-        L = np.outer(x,h)
-
-        # Calculate dot(H)
-        # H[i+1] = H[i] + dt*( 1 / (2 * (2 * eta_s - lambda_0)*(4 - d**2 * H[i]**2)) )*( np.trace(alpha_H.T @ L) - (epsilon * R_m * I[i] / d)*np.trace(beta_H.T@ L)) 
     
+    for i in range(Nt-1):
+        # Calculate dot(H)
+        H[i+1] = H[i] + dt*dH_n(H[i], phi[i], tilde_c[i], I[i], args)
+
+        c = tilde_c[i]/(k_c*(tilde_c_m-tilde_c[i]))
         # Calculate dot(c)
-        # tilde_c[i+1] = tilde_c[i] + dt * ( (k_on - k_c * k_off) / (2 * k_c) )*np.trace(alpha_c.T @ L)
+        tilde_c[i+1] = 0 #tilde_c[i] + dt (tilde_k(H[i], tilde_c[i], phi[i], c, args[:-8])/2)*(mu_a(H[i], tilde_c[i], phi[i], args[:-8])-mu_b(c, c_0, mu_0b, R, T, a_0)) 
 
         # Calculate dot(phi)
-        phi[i+1] = phi[i] + dt*(2 /( (2 * eta_s - lambda_0)* (4 - d**2 * H[i]**2)**3))*( np.trace(alpha_phi.T @ L) - (epsilon * R_m * I[i] / d)*np.trace(beta_phi.T @ L))
+        phi[i+1] = phi[i] + dt*dphi_n(H[i], phi[i], tilde_c[i], I[i], args)
         
-        if verbose==True:
+        if verbose==True:            
+            with open("out"+os.sep+filename+".out", 'a') as f:
+                f.write(str(i)+'\n')
+
             print(str(i)+'-[',[H[i], tilde_c[i], phi[i]],']\n')
 
             np.savetxt("data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
@@ -817,9 +901,6 @@ def FDsimulation(X0, I, Tt, Nt, arg, filename, verbose=False):
 
 
 
-
-
-
 def minimserPlot(X, V, I, t, k_c, filename):
     '''
     
@@ -827,13 +908,13 @@ def minimserPlot(X, V, I, t, k_c, filename):
     #-------------------------------------------Plot Data------------------------------------------
     fig, ax = plt.subplots(4,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
 
-    ax[0].plot(t[2:2300]*1e6, (X[2:2300,0]), label = r'$H$ (nm^1)') 
+    ax[0].plot(t[2:]*1e6, (X[2:,0]), label = r'$H$ (nm^1)') 
     ax[0].set_ylim(ax[0].get_ylim()[0], ax[0].get_ylim()[1])
     ax[0].set_xlabel(r't ($\mu$s)')
     ax[0].set_ylabel('$\Delta$ H (m$^{-1}$)', rotation = 90)
     # ax[0].legend()
 
-    ax[1].plot(t[2:2300]*1e6, tilde(X[2:2300,1], k_c), color =  ax[0]._get_lines.get_next_color(), label = r'$c$')
+    ax[1].plot(t[2:]*1e6, tilde(X[2:,1], k_c), color =  ax[0]._get_lines.get_next_color(), label = r'$c$')
     ax[1].set_xlabel(r't ($\mu$s)')
     ax[1].set_ylabel(r'$\tilde{c}$', rotation = 90)
     ax[1].set_ylim(0, ax[1].get_ylim()[1])
@@ -846,22 +927,21 @@ def minimserPlot(X, V, I, t, k_c, filename):
     # handles0, labels0 = ax[1].get_legend_handles_labels()
     # handles1, labels1 = ax1.get_legend_handles_labels()
     # ax[1].legend(handles0+handles1, labels0+labels1, loc=[0.75, 0.4], frameon=False)
-
-    ax[2].plot(t[2:2300]*1e6, X[2:2300,2], color =  ax[0]._get_lines.get_next_color(), label = r'$\phi$')
+    ax[2].plot(t[2:]*1e6, X[2:,2], color =  ax[0]._get_lines.get_next_color(), label = r'$\phi$')
     ax[2].set_xlabel(r't ($\mu$s)', rotation = 0)
     ax[2].set_ylabel(r'$\phi (V)$', rotation = 90)
     ax[2].set_ylim(ax[2].get_ylim()[0], ax[2].get_ylim()[1])
     # ax[2].legend()
     # ax[2].set_ylim(0,10000)
 
-    ax[3].plot(t[2:2300]*1e6, I[2:2300], color =  ax[0]._get_lines.get_next_color(), label = r'$I$')
+    ax[3].plot(t[2:]*1e6, I[2:], color =  ax[0]._get_lines.get_next_color(), label = r'$I$')
     ax[3].set_xlabel(r't ($\mu$s)', rotation = 0)
     ax[3].set_ylabel(r'$I (A)$', rotation = 90)
     ax[3].set_ylim(ax[3].get_ylim()[0], ax[3].get_ylim()[1])
     # ax[3].legend()
     # ax[3].set_ylim(0,10000)
 
-    # ax[4].plot(t[2:2300]*1e6, V[2:2300], color =  ax[0]._get_lines.get_next_color(), label = r'$V$')
+    # ax[4].plot(t[2:2300]*1e6, V[2:], color =  ax[0]._get_lines.get_next_color(), label = r'$V$')
     # ax[4].set_xlabel(r't ($\mu$s)', rotation = 0)
     # ax[4].set_ylabel(r'$V (mV)$', rotation = 90)
     # ax[4].set_ylim(ax[4].get_ylim()[0], ax[4].get_ylim()[1])
