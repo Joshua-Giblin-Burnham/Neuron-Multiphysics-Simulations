@@ -171,8 +171,8 @@ def tilde(c,k_c):
 
 
 #----------------------------------------Rayleighian Functions-------------------------------------------
-# @njit
-def Rayleighian(X_n, X, dt, args):
+@njit
+def Rayleighian(X, X_n, dt, args):
     '''Calculate the Rayleighian function.
 
     Args:
@@ -188,7 +188,7 @@ def Rayleighian(X_n, X, dt, args):
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d, m, h,o, p,  n, I = args
     
     H, c, phi = X
-    H_dot, c_dot, phi_dot = -(X-X_n)/dt
+    H_dot, c_dot, phi_dot = (X-X_n)/dt
     tilde_c, tilde_c_dot  = tilde(c,k_c), tilde(c_dot,k_c)
     
     # H_n, c_n, phi_n = X_n
@@ -272,7 +272,7 @@ def wavePulse(t, A, k, wavelets, Tt, A_0):
     # return p
 
 
-
+@njit
 def wavePeriod(f, wavelets, Tt):
     '''Calculate the periods of waves given frequency, number of wavelets, and total time.
 
@@ -287,12 +287,14 @@ def wavePeriod(f, wavelets, Tt):
     Nwavelets = 2*wavelets + 1 
     fmin      = Nwavelets/Tt
     fdelta    = f*Tt/Nwavelets#1
-    f1        = f*fmin/( f + (math.ceil(fdelta)-fdelta)*fmin )
+    f1        = f*fmin/( f + (np.ceil(fdelta)-fdelta)*fmin )
 
     periods   = np.sort(np.array([ abs(Tt/2 + ( (1+2*(wavelets-1))/(2*f1) ) -  i/f1) for i in range(Nwavelets-1)] ))
 
     return  periods[periods<=Tt]
 
+
+@njit
 def periodConditions(t, periods):
     '''Determine if a given time falls within any of the specified periods.
 
@@ -575,11 +577,27 @@ def beta_p(phi):
     return 0.13496 / (1 + np.exp((phi + 10.27853) / (-9.09334)))
 
 
+def I_inj(type, Nt):
+    I = np.zeros(Nt)
+    i_inj = 0.01 #8e-8
+
+    if   type == 'None':
+        None
+
+    elif type == 'Pulse':
+        I[int(Nt*0.45):int(Nt*0.65)] = i_inj
+
+    elif type == 'Pulse_2':
+        I[int(Nt*0.2):int(Nt*0.4)] = i_inj
+        I[int(Nt*0.6):int(Nt*0.8)] = i_inj
+        
+    else: 
+        raise Exception("Invalid injection current")
+
+    return I
 
 
-
-
-def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=False):
+def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, solveType = 'explicit', verbose=False, cwd='.'):
     '''Perform minimization using the Herzog model equations.
 
     Args:
@@ -598,6 +616,15 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=False):
 
     if constraint.constraint == 'FD':
         raise Exception('Simulation requires FDsimulation function not minimisation') 
+    
+    if solveType == 'explicit':
+        minRayleighian = lambda X, X_n, dt, args : Rayleighian(X_n, X, -dt, args)
+    
+    elif solveType == 'implicit':
+        minRayleighian = Rayleighian
+
+    else:
+        raise Exception('Not accepted solver; Simulation requires explicit or implicit')
     
     t, dt = np.linspace(0,Tt,Nt), Tt/Nt
 
@@ -626,7 +653,7 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=False):
     for i in range(Nt-1):
 
         args = arg + (m[i], h[i],o[i], p[i], n[i], I[i])
-        opt  = scipy.optimize.basinhopping(Rayleighian, x0=X[i], minimizer_kwargs={'args':(X[i], dt, args), 'constraints': constraint.constraintList(t[i]), 'tol': 1e-18}, target_accept_rate=0.1)
+        opt  = scipy.optimize.basinhopping(minRayleighian, x0=X[i], minimizer_kwargs={'args':(X[i], dt, args), 'constraints': constraint.constraintList(t[i]), 'tol': 1e-18}, target_accept_rate=0.1)
         X[i+1], Xerr[i+1]= opt['x'], opt['success']
 
 
@@ -678,16 +705,224 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=False):
             print(str(i)+'-'+str(opt['success'])+'\n')
 
             #-------------------------------------------Export data------------------------------------------
-            with open("out"+os.sep+filename+".out", 'a') as f:
+            with open(cwd+os.sep+"out"+os.sep+filename+".out", 'a') as f:
                 f.write(str(i)+'-'+str(opt['success'])+'\n')
             
-            np.savetxt("data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
-            np.savetxt("data"+os.sep+"X-"+filename+".csv",X,delimiter=',')    
-            np.savetxt("data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
-            np.savetxt("data"+os.sep+"V-"+filename+".csv",V,delimiter=',')
-            np.savetxt("data"+os.sep+"XErr-"+filename+".csv",Xerr,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+"X-"+filename+".csv",X,delimiter=',')    
+            np.savetxt(cwd+os.sep+"data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+"V-"+filename+".csv",V,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+"XErr-"+filename+".csv",Xerr,delimiter=',')
         
     return X, Xerr, V, t
+
+
+def dphi_n(H, tilde_c, phi, I, args):
+    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
+    
+    g_m = 1/(2*R_m)
+    chi_phi = 0.5 * (phi_0*H - 2*R_m*I) # + (rho_0*a_0 + q*tilde_c) / (2*Cm(H,d,epsilon)*a_0))
+    
+    term1 = I - g_m*(phi+ phi_0*H)
+
+    term2 = (g_m/ (2*Cm(H,d,epsilon))) * (rho_0 + q*tilde_c/ a_0)
+    
+    term3_1 =   - 2 * d**2 * Pa * ( phi)*H # + (4*gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi)*phi_0) / (2*d**2*Pa) ) * H
+
+    term3_2 = ( 2 * d**2 * gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * phi - 4*K_b*H_0 * phi_0 * tilde_c)*H**2# + (4*epsilon*chi_phi*phi_0 - 3*d**2*Pa)/d*phi_0) * H**2
+    term3_3 = 4*K_b*H_0*d**2 * (phi* (tilde_c- 2*epsilon*chi_phi*phi_0 / (K_b*H_0*d)) + (3*gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi)*d**2 - 16*K_b) / (4*K_b*H_0*d**2) * phi_0) * H**3
+    term3_4 = (2*chi_phi * epsilon * d**3 * phi * (phi+ (4*K_b*d - epsilon*phi_0**2) / (chi_phi*epsilon*d**2)) - 6*d**2*phi_0*K_b*H_0*(tilde_c+ 2*epsilon*chi_phi*phi_0 / (K_b*H_0*d))) * H**4
+    term3_5 = epsilon*d**3*phi_0 * (phi* (phi+ 6*chi_phi) + (12*K_b) / (epsilon*d)) * H**5
+    term3_6 = -3*epsilon*d**3*phi_0**2 * (phi+ 3*chi_phi) * H**6
+    
+    term3 = term3_1 + term3_2 + term3_3 + term3_4 + term3_5 + term3_6
+    
+    term3 *= -epsilon / (8*d*(2*eta_s + lambda_0))
+    
+    dphi = -(1/Cm(H,d,epsilon)) * (term1 + term2 + term3)
+    
+    return dphi, [term1, term2, term3_1, term3_2, term3_3, term3_4, term3_5, term3_6]
+
+def dH_n(H, phi, tilde_c, I, args):
+    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
+
+    chi_phi = 0.5 * (phi_0*H - 2*R_m*I) # + (rho_0*a_0 + q*tilde_c) / (2*Cm(H,d,epsilon)*a_0))
+    
+    term1 = Pa - gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * H
+    term2 = -2*K_b*H_0 * (tilde_c- epsilon * chi_phi * phi_0 / (K_b * H_0 * d)) * H**2
+    term3 = -chi_phi * epsilon * d * (phi+ 4*K_b / (chi_phi * epsilon * d)) * H**3
+    term4 = -0.5 * epsilon * d * phi_0 * (phi+ 3*chi_phi) * H**4
+    
+    dH = (1 / (2*(2*eta_s + lambda_0))) * (term1 + term2 + term3 + term4)
+    return dH, [term1, term2, term3, term4]
+
+
+
+def FDsimulation(X0, I, Tt, Nt, args, filename, verbose=False, cwd='.'):
+    '''  
+
+    '''
+    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
+
+    t, dt = np.linspace(0,Tt,Nt), Tt/Nt
+
+    H = np.zeros(Nt)
+    tilde_c= X0[1]*np.ones(Nt)
+    phi= np.zeros(Nt)
+
+    Hterm = np.zeros([Nt,4])
+    phiterm = np.zeros([Nt,8])
+
+    H[0], tilde_c[0], phi[0] = X0
+    
+    for i in range(Nt-1):
+        # Calculate dot(H)
+        H[i+1] = H[i] + dt*dH_n(H[i], phi[i], tilde_c[i], I[i], args)[0]
+
+        c = tilde_c[i]/(k_c*(tilde_c_m-tilde_c[i]))
+        # Calculate dot(c)
+        tilde_c[i+1] = 0 #tilde_c[i] + dt (tilde_k(H[i], tilde_c[i], phi[i], c, args[:-8])/2)*(mu_a(H[i], tilde_c[i], phi[i], args[:-8])-mu_b(c, c_0, mu_0b, R, T, a_0)) 
+
+        # Calculate dot(phi)
+        phi[i+1] = phi[i] + dt*dphi_n(H[i], phi[i], tilde_c[i], I[i], args)[0]
+
+
+
+        Hterm[i+1] =  dH_n(H[i], phi[i], tilde_c[i], I[i], args)[1]
+        # Calculate dot(phi)
+        phiterm[i+1] = dphi_n(H[i], phi[i], tilde_c[i], I[i], args)[1]
+        
+        if verbose==True:            
+            with open(cwd+os.sep+"out"+os.sep+filename+".out", 'a') as f:
+                f.write(str(i)+'\n')
+
+            print(str(i)+'-[',[H[i], tilde_c[i], phi[i]],']\n')
+
+            np.savetxt(cwd+os.sep+"data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+"X-"+filename+".csv",np.array([H, tilde_c, phi]),delimiter=',')    
+            np.savetxt(cwd+os.sep+"data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
+
+    return np.array([H, tilde_c, phi]), t, [Hterm, phiterm]
+
+
+
+def minimserPlot(X, V, I, t, k_c, filename, cwd='.'):
+    '''
+    
+    ''' 
+    #-------------------------------------------Plot Data------------------------------------------
+    fig, ax = plt.subplots(4,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
+
+    ax[0].plot(t[2:]*1e6, (X[2:,0]), label = r'$H$ (nm^1)') 
+    ax[0].set_ylim(ax[0].get_ylim()[0], ax[0].get_ylim()[1])
+    ax[0].set_xlabel(r't ($\mu$s)')
+    ax[0].set_ylabel('$\Delta$ H (m$^{-1}$)', rotation = 90)
+    # ax[0].legend()
+
+    ax[1].plot(t[2:]*1e6, tilde(X[2:,1], k_c), color =  ax[0]._get_lines.get_next_color(), label = r'$c$')
+    ax[1].set_xlabel(r't ($\mu$s)')
+    ax[1].set_ylabel(r'$\tilde{c}$', rotation = 90)
+    ax[1].set_ylim(0, ax[1].get_ylim()[1])
+
+    # ax1 = ax[1].twinx()
+    # ax1.plot(t[2:], tilde(X[2:,1], c_0), ':', color =  ax[1].lines[-1].get_color(), label = r'$\tilde{c}$')
+    # ax1.set_ylabel(r'$\tilde{c}$', rotation = 0)
+    # ax1.set_ylim(0, ax1.get_ylim()[1])
+
+    # handles0, labels0 = ax[1].get_legend_handles_labels()
+    # handles1, labels1 = ax1.get_legend_handles_labels()
+    # ax[1].legend(handles0+handles1, labels0+labels1, loc=[0.75, 0.4], frameon=False)
+    ax[2].plot(t[2:]*1e6, X[2:,2], color =  ax[0]._get_lines.get_next_color(), label = r'$\phi$')
+    ax[2].set_xlabel(r't ($\mu$s)', rotation = 0)
+    ax[2].set_ylabel(r'$\phi (V)$', rotation = 90)
+    ax[2].set_ylim(ax[2].get_ylim()[0], ax[2].get_ylim()[1])
+    # ax[2].legend()
+    # ax[2].set_ylim(0,10000)
+
+    ax[3].plot(t[2:]*1e6, I[2:], color =  ax[0]._get_lines.get_next_color(), label = r'$I$')
+    ax[3].set_xlabel(r't ($\mu$s)', rotation = 0)
+    ax[3].set_ylabel(r'$I (A)$', rotation = 90)
+    ax[3].set_ylim(ax[3].get_ylim()[0], ax[3].get_ylim()[1])
+    # ax[3].legend()
+    # ax[3].set_ylim(0,10000)
+
+    # ax[4].plot(t[2:2300]*1e6, V[2:], color =  ax[0]._get_lines.get_next_color(), label = r'$V$')
+    # ax[4].set_xlabel(r't ($\mu$s)', rotation = 0)
+    # ax[4].set_ylabel(r'$V (mV)$', rotation = 90)
+    # ax[4].set_ylim(ax[4].get_ylim()[0], ax[4].get_ylim()[1])
+    # ax[4].legend()
+    # ax[4].set_ylim(0,10000)
+
+    fig.tight_layout()
+    fig.savefig(cwd+os.sep+'Figures'+ os.sep + filename+'.pdf', bbox_inches = 'tight')
+
+
+
+def FDPlot(X, I, t, filename, terms, cwd='.'):
+    '''
+    
+    ''' 
+    #-------------------------------------------Plot Data------------------------------------------
+    fig, ax = plt.subplots(4,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
+
+    ax[0].plot(t*1e6, X[0], label = r'$H$ (nm^1)') 
+    ax[0].set_ylim(ax[0].get_ylim()[0], ax[0].get_ylim()[1])
+    ax[0].set_xlabel(r't ($\mu$s)')
+    ax[0].set_ylabel('H (m$^{-1}$)', rotation = 90)
+    # ax[0].legend()
+
+    ax[1].plot(t*1e6, X[1], color =  ax[0]._get_lines.get_next_color(), label = r'$c$')
+    ax[1].set_xlabel(r't ($\mu$s)')
+    ax[1].set_ylabel(r'$\tilde{c}$', rotation = 90)
+    ax[1].set_ylim(0, ax[1].get_ylim()[1])
+
+    ax[2].plot(t*1e6, X[2], color =  ax[0]._get_lines.get_next_color(), label = r'$\phi$')
+    ax[2].set_xlabel(r't ($\mu$s)', rotation = 0)
+    ax[2].set_ylabel(r'$\phi (V)$', rotation = 90)
+    ax[2].set_ylim(ax[2].get_ylim()[0], ax[2].get_ylim()[1])
+    # ax[2].legend()
+    # ax[2].set_ylim(0,10000)
+
+    ax[3].plot(t*1e6, I, color =  ax[0]._get_lines.get_next_color(), label = r'$I$')
+    ax[3].set_xlabel(r't ($\mu$s)', rotation = 0)
+    ax[3].set_ylabel(r'$I (A)$', rotation = 90)
+    ax[3].set_ylim(ax[3].get_ylim()[0], ax[3].get_ylim()[1])
+    # ax[3].legend()
+    # ax[3].set_ylim(0,10000)
+
+    fig.tight_layout()
+    fig.savefig(cwd+os.sep+'Figures'+ os.sep + filename+'.pdf', bbox_inches = 'tight')
+
+    #-------------------------------------------Plot Data------------------------------------------
+    fig, ax = plt.subplots(3,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
+
+    for i in range(len(terms[0][0])):
+        ax[0].plot(t*1e6, terms[0][:,i],  label ='Term'+str(i)) 
+    ax[0].set_xlabel(r't ($\mu$s)')
+    ax[0].set_ylabel('H (m$^{-1}$)', rotation = 90)
+    ax[0].legend()
+
+
+    for i in range(len(terms[1][0])):
+        ax[1].plot(t*1e6, terms[1][:,i], color =  ax[0]._get_lines.get_next_color(), label ='Term'+str(i))
+    ax[1].set_xlabel(r't ($\mu$s)')
+    ax[1].set_ylabel(r'$\phi$', rotation = 90)
+    ax[1].legend()
+
+    ax[2].plot(t*1e6, I, color =  ax[0]._get_lines.get_next_color(), label = r'$I$')
+    ax[2].set_xlabel(r't ($\mu$s)', rotation = 0)
+    ax[2].set_ylabel(r'$I (A)$', rotation = 90)
+
+    fig.tight_layout()
+    fig.savefig(cwd+os.sep+'Figures'+ os.sep + filename+'terms.pdf', bbox_inches = 'tight')
+
+
+
+
+
+
+
+
 
 
 
@@ -816,174 +1051,3 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, verbose=False):
 #             np.savetxt("data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
 
 #     return np.array([H, tilde_c, phi]), t
-
-
-
-
-
-def dphi_n(H, tilde_c, phi, I, args):
-    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
-    
-    g_m = 1/(2*R_m)
-    chi_phi = 0.5 * (phi_0*H - 2*R_m*I) # + (rho_0*a_0 + q*tilde_c) / (2*Cm(H,d,epsilon)*a_0))
-    
-    term1 = I - g_m*(phi+ phi_0*H)
-
-    term2 = (g_m/ (2*Cm(H,d,epsilon))) * (rho_0 + q*tilde_c/ a_0)
-    
-    term3_1 = 4 * phi_0 * Pa  - 2 * d**2 * Pa * ( phi + (4*gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi)*phi_0) / (2*d**2*Pa) ) * H
-
-    term3_2 = ( 2 * d**2 * gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * phi - 4*K_b*H_0 * phi_0 * tilde_c + (4*epsilon*chi_phi*phi_0 - 3*d**2*Pa)/d*phi_0) * H**2
-    term3_3 = 4*K_b*H_0*d**2 * (phi* (tilde_c- 2*epsilon*chi_phi*phi_0 / (K_b*H_0*d)) + (3*gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi)*d**2 - 16*K_b) / (4*K_b*H_0*d**2) * phi_0) * H**3
-    term3_4 = (2*chi_phi * epsilon * d**3 * phi * (phi+ (4*K_b*d - epsilon*phi_0**2) / (chi_phi*epsilon*d**2)) - 6*d**2*phi_0*K_b*H_0*(tilde_c+ 2*epsilon*chi_phi*phi_0 / (K_b*H_0*d))) * H**4
-    term3_5 = epsilon*d**3*phi_0 * (phi* (phi+ 6*chi_phi) + (12*K_b) / (epsilon*d)) * H**5
-    term3_6 = -3*epsilon*d**3*phi_0**2 * (phi+ 3*chi_phi) * H**6
-    
-    term3 = term3_1 + term3_2 + term3_3 + term3_4 + term3_5 + term3_6
-    
-    term3 *= -epsilon / (8*d*(2*eta_s + lambda_0))
-    
-    dphi = -(1/Cm(H,d,epsilon)) * (term1 + term2 + term3)
-    
-    return dphi
-
-def dH_n(H, phi, tilde_c, I, args):
-    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
-
-    chi_phi = 0.5 * (phi_0*H - 2*R_m*I) # + (rho_0*a_0 + q*tilde_c) / (2*Cm(H,d,epsilon)*a_0))
-    
-    term1 = Pa - gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * H
-    term2 = -2*K_b*H_0 * (tilde_c- epsilon * chi_phi * phi_0 / (K_b * H_0 * d)) * H**2
-    term3 = -chi_phi * epsilon * d * (phi+ 4*K_b / (chi_phi * epsilon * d)) * H**3
-    term4 = -0.5 * epsilon * d * phi_0 * (phi+ 3*chi_phi) * H**4
-    
-    dH = (1 / (2*(2*eta_s + lambda_0))) * (term1 + term2 + term3 + term4)
-    return dH
-
-
-
-def FDsimulation(X0, I, Tt, Nt, args, filename, verbose=False):
-    '''  
-
-    '''
-    K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
-
-    t, dt = np.linspace(0,Tt,Nt), Tt/Nt
-
-    H = np.zeros(Nt)
-    tilde_c= X0[1]*np.ones(Nt)
-    phi= np.zeros(Nt)
-
-    H[0], tilde_c[0], phi[0] = X0
-    
-    for i in range(Nt-1):
-        # Calculate dot(H)
-        H[i+1] = H[i] + dt*dH_n(H[i], phi[i], tilde_c[i], I[i], args)
-
-        c = tilde_c[i]/(k_c*(tilde_c_m-tilde_c[i]))
-        # Calculate dot(c)
-        tilde_c[i+1] = 0 #tilde_c[i] + dt (tilde_k(H[i], tilde_c[i], phi[i], c, args[:-8])/2)*(mu_a(H[i], tilde_c[i], phi[i], args[:-8])-mu_b(c, c_0, mu_0b, R, T, a_0)) 
-
-        # Calculate dot(phi)
-        phi[i+1] = phi[i] + dt*dphi_n(H[i], phi[i], tilde_c[i], I[i], args)
-        
-        if verbose==True:            
-            with open("out"+os.sep+filename+".out", 'a') as f:
-                f.write(str(i)+'\n')
-
-            print(str(i)+'-[',[H[i], tilde_c[i], phi[i]],']\n')
-
-            np.savetxt("data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
-            np.savetxt("data"+os.sep+"X-"+filename+".csv",np.array([H, tilde_c, phi]),delimiter=',')    
-            np.savetxt("data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
-
-    return np.array([H, tilde_c, phi]), t
-
-
-
-def minimserPlot(X, V, I, t, k_c, filename):
-    '''
-    
-    ''' 
-    #-------------------------------------------Plot Data------------------------------------------
-    fig, ax = plt.subplots(4,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
-
-    ax[0].plot(t[2:]*1e6, (X[2:,0]), label = r'$H$ (nm^1)') 
-    ax[0].set_ylim(ax[0].get_ylim()[0], ax[0].get_ylim()[1])
-    ax[0].set_xlabel(r't ($\mu$s)')
-    ax[0].set_ylabel('$\Delta$ H (m$^{-1}$)', rotation = 90)
-    # ax[0].legend()
-
-    ax[1].plot(t[2:]*1e6, tilde(X[2:,1], k_c), color =  ax[0]._get_lines.get_next_color(), label = r'$c$')
-    ax[1].set_xlabel(r't ($\mu$s)')
-    ax[1].set_ylabel(r'$\tilde{c}$', rotation = 90)
-    ax[1].set_ylim(0, ax[1].get_ylim()[1])
-
-    # ax1 = ax[1].twinx()
-    # ax1.plot(t[2:], tilde(X[2:,1], c_0), ':', color =  ax[1].lines[-1].get_color(), label = r'$\tilde{c}$')
-    # ax1.set_ylabel(r'$\tilde{c}$', rotation = 0)
-    # ax1.set_ylim(0, ax1.get_ylim()[1])
-
-    # handles0, labels0 = ax[1].get_legend_handles_labels()
-    # handles1, labels1 = ax1.get_legend_handles_labels()
-    # ax[1].legend(handles0+handles1, labels0+labels1, loc=[0.75, 0.4], frameon=False)
-    ax[2].plot(t[2:]*1e6, X[2:,2], color =  ax[0]._get_lines.get_next_color(), label = r'$\phi$')
-    ax[2].set_xlabel(r't ($\mu$s)', rotation = 0)
-    ax[2].set_ylabel(r'$\phi (V)$', rotation = 90)
-    ax[2].set_ylim(ax[2].get_ylim()[0], ax[2].get_ylim()[1])
-    # ax[2].legend()
-    # ax[2].set_ylim(0,10000)
-
-    ax[3].plot(t[2:]*1e6, I[2:], color =  ax[0]._get_lines.get_next_color(), label = r'$I$')
-    ax[3].set_xlabel(r't ($\mu$s)', rotation = 0)
-    ax[3].set_ylabel(r'$I (A)$', rotation = 90)
-    ax[3].set_ylim(ax[3].get_ylim()[0], ax[3].get_ylim()[1])
-    # ax[3].legend()
-    # ax[3].set_ylim(0,10000)
-
-    # ax[4].plot(t[2:2300]*1e6, V[2:], color =  ax[0]._get_lines.get_next_color(), label = r'$V$')
-    # ax[4].set_xlabel(r't ($\mu$s)', rotation = 0)
-    # ax[4].set_ylabel(r'$V (mV)$', rotation = 90)
-    # ax[4].set_ylim(ax[4].get_ylim()[0], ax[4].get_ylim()[1])
-    # ax[4].legend()
-    # ax[4].set_ylim(0,10000)
-
-    fig.tight_layout()
-    fig.savefig('Figures'+ os.sep + filename+'.pdf', bbox_inches = 'tight')
-
-
-
-def FDPlot(X, I, t, filename):
-    '''
-    
-    ''' 
-    #-------------------------------------------Plot Data------------------------------------------
-    fig, ax = plt.subplots(4,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
-
-    ax[0].plot(t*1e6, X[0], label = r'$H$ (nm^1)') 
-    ax[0].set_ylim(ax[0].get_ylim()[0], ax[0].get_ylim()[1])
-    ax[0].set_xlabel(r't ($\mu$s)')
-    ax[0].set_ylabel('$\Delta$ H (m$^{-1}$)', rotation = 90)
-    # ax[0].legend()
-
-    ax[1].plot(t*1e6, X[1], color =  ax[0]._get_lines.get_next_color(), label = r'$c$')
-    ax[1].set_xlabel(r't ($\mu$s)')
-    ax[1].set_ylabel(r'$\tilde{c}$', rotation = 90)
-    ax[1].set_ylim(0, ax[1].get_ylim()[1])
-
-    ax[2].plot(t*1e6, X[2], color =  ax[0]._get_lines.get_next_color(), label = r'$\phi$')
-    ax[2].set_xlabel(r't ($\mu$s)', rotation = 0)
-    ax[2].set_ylabel(r'$\phi (V)$', rotation = 90)
-    ax[2].set_ylim(ax[2].get_ylim()[0], ax[2].get_ylim()[1])
-    # ax[2].legend()
-    # ax[2].set_ylim(0,10000)
-
-    ax[3].plot(t*1e6, I, color =  ax[0]._get_lines.get_next_color(), label = r'$I$')
-    ax[3].set_xlabel(r't ($\mu$s)', rotation = 0)
-    ax[3].set_ylabel(r'$I (A)$', rotation = 90)
-    ax[3].set_ylim(ax[3].get_ylim()[0], ax[3].get_ylim()[1])
-    # ax[3].legend()
-    # ax[3].set_ylim(0,10000)
-
-    fig.tight_layout()
-    fig.savefig('Figures'+ os.sep + filename+'.pdf', bbox_inches = 'tight')
