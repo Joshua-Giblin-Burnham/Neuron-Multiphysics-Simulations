@@ -1,38 +1,37 @@
 import argparse
 import sys
 import os
+
 sys.path.insert(1, os.getcwd())
 sys.path.insert(1, os.getcwd()+os.sep+"..")
+cwd = os.getcwd()
 
 parser = argparse.ArgumentParser(prog ="Finite Difference Simulation of Neuronal Patch",
                                  description = "The code can be used to simulate the mechno-electrophysiological and biochemical coupling in neurons. \n This code implements a finite difference model for simulating neural dynamics with the incorporation of neuromodulation constraints. The model is implemented in Python using scientific computing libraries such as NumPy, SciPy, and Numba. The code includes functions to calculate various model parameters, generate ultrasound pulses, and perform optimization using the Rayleighian function.",
                                  epilog ='See documentation: https://neuron-multiphysics-simulations.readthedocs.io/en/latest/index.html for further help',)
 
-parser.add_argument('simulator', metavar='simulator', action='store', help='Simulator to run, either Finite Difference iterator or Rayleighian minimiser [FD or minimiser]')          
-parser.add_argument('-o', '--output', action='store', default=sys.path.insert(1, os.getcwd()), type=str, help='Output directory')  
-
-parser.add_argument('-v', '--verbose', action='store_true', help='Print output at each step')  
-parser.add_argument('-e', '--explicit', action='store_true',  help='Set simulation type for minimiser as explicit (cannot be given alongside -e)')
-parser.add_argument('-i', '--implicit', action='store_true',  help='Set simulation type for minimiser as implicit (cannot be given alongside -i)')
-
-parser.add_argument('-N', '--Num', metavar='', action='store', default='0', type=str, help='Simulation number for data storage')  
-parser.add_argument('-c', '--constraint', metavar='', action='store', default='None', type=str, help='Constraint method to apply constraints during minimization')  
-parser.add_argument('-I', '--injection', metavar= '', action='store', default='None', type=str, help='Injected current used in simulation')  
-
-parser.add_argument('-Nt', '--NSteps', metavar='', action='store', default=500, type=int, help='Number of time steps (int)')  
-parser.add_argument('-Tt', '--Total_time',metavar='', action='store', default=1e-6, type=float, help='Total time for the simulation (float)')    
+parser.add_argument('simulator',  metavar='simulator', action='store',      help='Simulator to run, either Finite Difference iterator or Rayleighian minimiser [FD or minimiser]')          
+parser.add_argument('-v', '--verbose',                 action='store_true', help='Print output at each step')  
+parser.add_argument('-e', '--explicit',                action='store_true', help='Set simulation type for minimiser as explicit (cannot be given alongside -e)')
+parser.add_argument('-i', '--implicit',                action='store_true', help='Set simulation type for minimiser as implicit (cannot be given alongside -i)')
+parser.add_argument('-o', '--output',      metavar='', action='store', default= cwd,   type=str,   help='Output directory')  
+parser.add_argument('-n', '--num',         metavar='', action='store', default='0',    type=str,   help='Simulation number for data storage')  
+parser.add_argument('-c', '--constraint',  metavar='', action='store', default='None', type=str,   help='Constraint method to apply constraints during minimization')  
+parser.add_argument('-I', '--Injection',   metavar='', action='store', default='None', type=str,   help='Injected current used in simulation')  
+parser.add_argument('-Nt', '--NSteps',     metavar='', action='store', default=500,    type=int,   help='Number of time steps (int)')  
+parser.add_argument('-Tt', '--Total_time', metavar='', action='store', default=1e-6,   type=float, help='Total time for the simulation (float)')    
 
 arg = parser.parse_args()
 
 if arg.simulator == 'FD':
     simType = 'Finite Difference Iterator'
-    filename = arg.Num + arg.simulator
+    filename = arg.num + arg.simulator
 
 elif arg.simulator == 'minimiser':
-    filename = arg.Num + arg.constraint
+    filename = arg.num + arg.constraint
     if arg.implicit == False and arg.explicit == False:
         solveType = 'implicit'    
-        simType = 'Explicit minimisation'
+        simType = 'Implicit minimisation'
     elif arg.implicit == True and arg.explicit == False:
         solveType = 'implicit'    
         simType = 'Implicit minimisation'
@@ -126,9 +125,9 @@ cappar = (capa*A0/d)
 #==========================================================================================================
 #                           Preallocate the variables and calculate the initial values
 #==========================================================================================================
-I = nuphysim.I_inj(arg.injection, Nt)
+I = nuphysim.I_inj(arg.Injection, Nt)
 
-args  = (K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d)
+args = (K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_m, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d)
 
 constraints = nuphysim.patchsim.Constraints(constraintType, dt, Tt, Nt)
 

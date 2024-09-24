@@ -211,7 +211,7 @@ def Rayleighian(X, X_n, dt, args):
         - C_m * phi * phi_0 * H_dot  
         + (2 * eta_s + lambda_0)*float(H and H_dot/H)**2 
         - (phi**2 + 2 * phi_0 * phi * H) * C_m_dot 
-        + (gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * H - Pa) * H_dot * float(H and 1/H)**2
+        # + (gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * H - Pa) * H_dot * float(H and 1/H)**2
         
         + 
         ( 0 
@@ -576,7 +576,7 @@ def beta_p(phi):
     """
     return 0.13496 / (1 + np.exp((phi + 10.27853) / (-9.09334)))
 
-
+@njit
 def I_inj(type, Nt):
     I = np.zeros(Nt)
     i_inj = 0.01 #8e-8
@@ -717,6 +717,8 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, solveType = 'exp
     return X, Xerr, V, t
 
 
+
+@njit
 def dphi_n(H, tilde_c, phi, I, args):
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
     
@@ -729,12 +731,14 @@ def dphi_n(H, tilde_c, phi, I, args):
     
     term3_1 =   - 2 * d**2 * Pa * ( phi)*H # + (4*gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi)*phi_0) / (2*d**2*Pa) ) * H
 
-    term3_2 = ( 2 * d**2 * gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * phi - 4*K_b*H_0 * phi_0 * tilde_c)*H**2# + (4*epsilon*chi_phi*phi_0 - 3*d**2*Pa)/d*phi_0) * H**2
+    term3_2 = ( 2 * d**2 * gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * phi - 4*K_b*H_0 * phi_0 * tilde_c)*H**2 # + (4*epsilon*chi_phi*phi_0 - 3*d**2*Pa)/d*phi_0) * H**2
     term3_3 = 4*K_b*H_0*d**2 * (phi* (tilde_c- 2*epsilon*chi_phi*phi_0 / (K_b*H_0*d)) + (3*gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi)*d**2 - 16*K_b) / (4*K_b*H_0*d**2) * phi_0) * H**3
     term3_4 = (2*chi_phi * epsilon * d**3 * phi * (phi+ (4*K_b*d - epsilon*phi_0**2) / (chi_phi*epsilon*d**2)) - 6*d**2*phi_0*K_b*H_0*(tilde_c+ 2*epsilon*chi_phi*phi_0 / (K_b*H_0*d))) * H**4
     term3_5 = epsilon*d**3*phi_0 * (phi* (phi+ 6*chi_phi) + (12*K_b) / (epsilon*d)) * H**5
     term3_6 = -3*epsilon*d**3*phi_0**2 * (phi+ 3*chi_phi) * H**6
-    
+
+    term3_3*=0
+
     term3 = term3_1 + term3_2 + term3_3 + term3_4 + term3_5 + term3_6
     
     term3 *= -epsilon / (8*d*(2*eta_s + lambda_0))
@@ -743,6 +747,7 @@ def dphi_n(H, tilde_c, phi, I, args):
     
     return dphi, [term1, term2, term3_1, term3_2, term3_3, term3_4, term3_5, term3_6]
 
+@njit
 def dH_n(H, phi, tilde_c, I, args):
     K_b, H_0, phi_0, eta_s, lambda_0, epsilon, gamma_0, xi, Pa, R_m, tilde_c_m, mu_0a, mu_0b, k_on, k_off, a_0, k_c, c_0, rho_0, q, C_D, R, T, A0, G_Na_fast, G_Na_slow, G_K, G_Leak, E_Na, E_K, E_Leak, d = args
 
@@ -753,11 +758,13 @@ def dH_n(H, phi, tilde_c, I, args):
     term3 = -chi_phi * epsilon * d * (phi+ 4*K_b / (chi_phi * epsilon * d)) * H**3
     term4 = -0.5 * epsilon * d * phi_0 * (phi+ 3*chi_phi) * H**4
     
+    term1*=0
+    
     dH = (1 / (2*(2*eta_s + lambda_0))) * (term1 + term2 + term3 + term4)
     return dH, [term1, term2, term3, term4]
 
 
-
+# @njit
 def FDsimulation(X0, I, Tt, Nt, args, filename, verbose=False, cwd='.'):
     '''  
 
@@ -785,8 +792,6 @@ def FDsimulation(X0, I, Tt, Nt, args, filename, verbose=False, cwd='.'):
 
         # Calculate dot(phi)
         phi[i+1] = phi[i] + dt*dphi_n(H[i], phi[i], tilde_c[i], I[i], args)[0]
-
-
 
         Hterm[i+1] =  dH_n(H[i], phi[i], tilde_c[i], I[i], args)[1]
         # Calculate dot(phi)
@@ -894,7 +899,7 @@ def FDPlot(X, I, t, filename, terms, cwd='.'):
     fig.savefig(cwd+os.sep+'Figures'+ os.sep + filename+'.pdf', bbox_inches = 'tight')
 
     #-------------------------------------------Plot Data------------------------------------------
-    fig, ax = plt.subplots(3,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
+    fig, ax = plt.subplots(2,1, figsize = (1.61*linewidth/2, 2.2*linewidth/2))
 
     for i in range(len(terms[0][0])):
         ax[0].plot(t*1e6, terms[0][:,i],  label ='Term'+str(i)) 
@@ -904,22 +909,13 @@ def FDPlot(X, I, t, filename, terms, cwd='.'):
 
 
     for i in range(len(terms[1][0])):
-        ax[1].plot(t*1e6, terms[1][:,i], color =  ax[0]._get_lines.get_next_color(), label ='Term'+str(i))
+        ax[1].plot(t*1e6, terms[1][:,i], label ='Term'+str(i))
     ax[1].set_xlabel(r't ($\mu$s)')
     ax[1].set_ylabel(r'$\phi$', rotation = 90)
     ax[1].legend()
 
-    ax[2].plot(t*1e6, I, color =  ax[0]._get_lines.get_next_color(), label = r'$I$')
-    ax[2].set_xlabel(r't ($\mu$s)', rotation = 0)
-    ax[2].set_ylabel(r'$I (A)$', rotation = 90)
-
     fig.tight_layout()
     fig.savefig(cwd+os.sep+'Figures'+ os.sep + filename+'terms.pdf', bbox_inches = 'tight')
-
-
-
-
-
 
 
 
