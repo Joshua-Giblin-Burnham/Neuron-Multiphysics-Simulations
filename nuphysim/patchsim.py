@@ -4,9 +4,13 @@
 # 
 
 # %% [markdown]
-# ## Imports#----------------------------------------------Imports-----------------------------------------------
-import sys
+# ----------------------------------------------Imports-----------------------------------------------
 import os
+import sys
+import time
+import subprocess
+from datetime import timedelta
+
 import numpy as np
 from numba import njit
 import math
@@ -31,6 +35,29 @@ plt.rcParams['mathtext.fontset'] = 'custom'
 plt.rcParams['mathtext.rm'] = 'Times New Roman'
 plt.rcParams['mathtext.it'] = 'Times New Roman:italic'
 plt.rcParams['mathtext.bf'] = 'Times New Roman:bold'
+
+
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    """Call in a loop to create terminal progress bar
+
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    # Print New Line on Complete
+    if iteration == total: 
+        print()
+
 
 # %% [markdown]
 #-------------------------------------------Active Functions---------------------------------------------
@@ -649,9 +676,11 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, solveType = 'exp
     p = np.zeros(Nt)
     p[0] = alpha_p(E_rest) / (alpha_p(E_rest) + beta_p(E_rest))
 
+    printProgressBar(0, Nt, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    acc, t0 = 0,  time.time()
+
     #-----------------------------------------------Minimisation------------------------------------------
     for i in range(Nt-1):
-
         args = arg + (m[i], h[i],o[i], p[i], n[i], I[i])
         opt  = scipy.optimize.basinhopping(minRayleighian, x0=X[i], minimizer_kwargs={'args':(X[i], dt, args), 'constraints': constraint.constraintList(t[i]), 'tol': 1e-18}, target_accept_rate=0.1)
         X[i+1], Xerr[i+1]= opt['x'], opt['success']
@@ -702,17 +731,22 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, solveType = 'exp
             constraint.changeUltrasoundParameters(A_0=X[i+1,0], A=X[i+1,0]/5)
 
         if verbose==True:
-            print(str(i)+'-'+str(opt['success'])+'\n')
-
             #-------------------------------------------Export data------------------------------------------
             with open(cwd+os.sep+"out"+os.sep+filename+".out", 'a') as f:
-                f.write(str(i)+'-'+str(opt['success'])+'\n')
+                f.write('Step '+str(i)+':'+str(opt['success'])+'\n')
             
             np.savetxt(cwd+os.sep+"data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
             np.savetxt(cwd+os.sep+"data"+os.sep+"X-"+filename+".csv",X,delimiter=',')    
             np.savetxt(cwd+os.sep+"data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
             np.savetxt(cwd+os.sep+"data"+os.sep+"V-"+filename+".csv",V,delimiter=',')
             np.savetxt(cwd+os.sep+"data"+os.sep+"XErr-"+filename+".csv",Xerr,delimiter=',')
+
+        t1 = time.time()
+        acc += int(opt['success'])
+        tprogress = timedelta(seconds= (Nt-i)*(t1-t0)/(i+1) )
+        
+        printProgressBar(i+1, Nt, prefix = 'Progress', suffix = 'Complete | Time left- '+str(tprogress).split('.')[0]+' | Accuracy- '+str(acc*100/(i+1))+'% ', length = 50)
+        
         
     return X, Xerr, V, t
 
@@ -781,7 +815,10 @@ def FDsimulation(X0, I, Tt, Nt, args, filename, verbose=False, cwd='.'):
     phiterm = np.zeros([Nt,8])
 
     H[0], tilde_c[0], phi[0] = X0
-    
+
+    printProgressBar(0, Nt, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    t0=time.time()
+
     for i in range(Nt-1):
         # Calculate dot(H)
         H[i+1] = H[i] + dt*dH_n(H[i], phi[i], tilde_c[i], I[i], args)[0]
@@ -801,11 +838,14 @@ def FDsimulation(X0, I, Tt, Nt, args, filename, verbose=False, cwd='.'):
             with open(cwd+os.sep+"out"+os.sep+filename+".out", 'a') as f:
                 f.write(str(i)+'\n')
 
-            print(str(i)+'-[',[H[i], tilde_c[i], phi[i]],']\n')
-
             np.savetxt(cwd+os.sep+"data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
             np.savetxt(cwd+os.sep+"data"+os.sep+"X-"+filename+".csv",np.array([H, tilde_c, phi]),delimiter=',')    
             np.savetxt(cwd+os.sep+"data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
+
+        t1 = time.time()
+        tprogress = timedelta((Nt-1-i)*(t1-t0)/(i+1)) 
+
+        printProgressBar(i+1, Nt-1, prefix = 'Progress', suffix = 'Complete | Time left- '+str(tprogress).split('.')[0], length = 50)       
 
     return np.array([H, tilde_c, phi]), t, [Hterm, phiterm]
 
@@ -821,7 +861,7 @@ def minimserPlot(X, V, I, t, k_c, filename, cwd='.'):
     ax[0].plot(t[2:]*1e6, (X[2:,0]), label = r'$H$ (nm^1)') 
     ax[0].set_ylim(ax[0].get_ylim()[0], ax[0].get_ylim()[1])
     ax[0].set_xlabel(r't ($\mu$s)')
-    ax[0].set_ylabel('$\Delta$ H (m$^{-1}$)', rotation = 90)
+    ax[0].set_ylabel(r'$\Delta$ H (m$^{-1}$)', rotation = 90)
     # ax[0].legend()
 
     ax[1].plot(t[2:]*1e6, tilde(X[2:,1], k_c), color =  ax[0]._get_lines.get_next_color(), label = r'$c$')
