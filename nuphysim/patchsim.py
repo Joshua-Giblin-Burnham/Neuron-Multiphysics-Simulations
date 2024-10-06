@@ -235,10 +235,16 @@ def Rayleighian(X, X_n, dt, args):
     
     R = ( 
         2 * K_b * (2 * H - H_0 * tilde_c) * H_dot 
+
         - C_m * phi * phi_0 * H_dot  
-        + (2 * eta_s + lambda_0)*float(H and H_dot/H)**2 
+
         - (phi**2 + 2 * phi_0 * phi * H) * C_m_dot 
-        # + (gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * H - Pa) * H_dot * float(H and 1/H)**2
+
+        + (2 * eta_s + lambda_0) * (H_dot**2) * float(H and 1/H)**2 
+
+        - Pa * H_dot * float(H and 1/H)**2
+
+        + gamma_a(tilde_c, phi, gamma_0, k_c, C_D, xi) * H_dot * float(H and 1/H)
         
         + 
         ( 0 
@@ -257,8 +263,11 @@ def Rayleighian(X, X_n, dt, args):
 
         + R_m * (I_ion)**2 
         # + R_m * (C_m*phi_dot)**2   
-        + R_m * (C_m*(phi_dot+phi_0*H_dot) - C_m_dot*(phi+phi_0*H))**2 
-        # + R_m * (C_m*(phi_dot+phi_0*H_dot) - C_m_dot*(phi+phi_0*H) + I_ion)**2 
+        + R_m * ( 0 
+            + C_m*(phi_dot+phi_0*H_dot) 
+            + C_m_dot*(phi+phi_0*H)
+            )**2 
+        # + R_m * (C_m*(phi_dot+phi_0*H_dot) + C_m_dot*(phi+phi_0*H) + I_ion)**2 
 
         ) * A0
 
@@ -735,11 +744,11 @@ def minimiser(H0, E_rest, I, Tt, Nt, arg, constraint, filename, solveType = 'exp
             with open(cwd+os.sep+"out"+os.sep+filename+".out", 'a') as f:
                 f.write('Step '+str(i)+':'+str(opt['success'])+'\n')
             
-            np.savetxt(cwd+os.sep+"data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
-            np.savetxt(cwd+os.sep+"data"+os.sep+"X-"+filename+".csv",X,delimiter=',')    
-            np.savetxt(cwd+os.sep+"data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
-            np.savetxt(cwd+os.sep+"data"+os.sep+"V-"+filename+".csv",V,delimiter=',')
-            np.savetxt(cwd+os.sep+"data"+os.sep+"XErr-"+filename+".csv",Xerr,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+filename+"-t"+".csv",t,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+filename+"-X"+".csv",X,delimiter=',')    
+            np.savetxt(cwd+os.sep+"data"+os.sep+filename+"-I"+".csv",I,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+filename+"-V"+".csv",V,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+filename+"-XErr"+".csv",Xerr,delimiter=',')
 
         t1 = time.time()
         acc += int(opt['success'])
@@ -838,9 +847,9 @@ def FDsimulation(X0, I, Tt, Nt, args, filename, verbose=False, cwd='.'):
             with open(cwd+os.sep+"out"+os.sep+filename+".out", 'a') as f:
                 f.write(str(i)+'\n')
 
-            np.savetxt(cwd+os.sep+"data"+os.sep+"t-"+filename+".csv",t,delimiter=',')
-            np.savetxt(cwd+os.sep+"data"+os.sep+"X-"+filename+".csv",np.array([H, tilde_c, phi]),delimiter=',')    
-            np.savetxt(cwd+os.sep+"data"+os.sep+"I-"+filename+".csv",I,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+filename+"-t"+".csv",t,delimiter=',')
+            np.savetxt(cwd+os.sep+"data"+os.sep+filename+"-X"+".csv",np.array([H, tilde_c, phi]),delimiter=',')    
+            np.savetxt(cwd+os.sep+"data"+os.sep+filename+"-I"+".csv",I,delimiter=',')
 
         t1 = time.time()
         tprogress = timedelta((Nt-1-i)*(t1-t0)/(i+1)) 
